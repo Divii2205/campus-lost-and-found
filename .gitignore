@@ -1,0 +1,29 @@
+# secrets
+.env
+*.pem
+terraform.tfvars
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+test.db
+
+# node
+node_modules/
+dist/
+
+# terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+tfplan
+crash.log
+
+# editors / os
+.idea/
+.vscode/
+.DS_Store
+*.log
