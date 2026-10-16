@@ -311,7 +311,9 @@ All 3 jobs passed: `test`, then `build-scan-push`, then `deploy` (deploy skipped
 
 The images are in GHCR. The tag is the commit SHA `29b1201ad5f4f1ab1c03823bd2f5071f05adf74b`, not `latest`:
 
-![GHCR package with the commit SHA tag](screenshots/05-ghcr-packages.png)
+![GHCR backend package with the commit SHA tag](screenshots/05-ghcr-packages.png)
+
+![GHCR frontend package with the same commit SHA tag](screenshots/05-ghcr-packages-frontend.png)
 
 ## Security
 
@@ -689,7 +691,7 @@ This project was built as the final DevOps capstone. The table maps each course 
 | **M2** Testing | pytest passes, at least 5 tests on 3 endpoints (11 tests, every endpoint), test DB not production, pytest.ini + conftest.py | `backend/tests/test_items.py`, `backend/tests/conftest.py`, `backend/pytest.ini` | [pytest -v](screenshots/02-pytest-passing.png) |
 | **M3** Git and GitHub | Public repo, meaningful commits (25+), `.gitignore` covers `.env`, `__pycache__`, `node_modules`, `.venv` | https://github.com/Divii2205/campus-lost-and-found, `.gitignore` | [git log](screenshots/03-git-log.png) |
 | **M4** Docker | Backend Dockerfile builds, frontend multi-stage (Node to nginx), non-root (uid 10001 / uid 101), `docker compose up --build` starts 3 services | `backend/Dockerfile`, `frontend/Dockerfile`, `docker-compose.yml` | [compose up](screenshots/04-docker-compose-up.png), [browser](screenshots/01-app-browser-localhost-3000.png) |
-| **M5** CI/CD | Workflow on push to `main`, pytest gate, frontend build, both images, push to GHCR, SHA tags | `.github/workflows/ci-cd.yml` | [green run](https://github.com/Divii2205/campus-lost-and-found/actions/runs/38920194477), [run screenshot](screenshots/05-github-actions-green.png), [lint + key lines](screenshots/05-ci-workflow-lint.png), [GHCR SHA tag](screenshots/05-ghcr-packages.png) |
+| **M5** CI/CD | Workflow on push to `main`, pytest gate, frontend build, both images, push to GHCR, SHA tags | `.github/workflows/ci-cd.yml` | [green run](https://github.com/Divii2205/campus-lost-and-found/actions/runs/38920194477), [run screenshot](screenshots/05-github-actions-green.png), [lint + key lines](screenshots/05-ci-workflow-lint.png), [GHCR backend](screenshots/05-ghcr-packages.png), [GHCR frontend](screenshots/05-ghcr-packages-frontend.png) |
 | **M6** DevSecOps | Trivy on both images in CI, fails on HIGH/CRITICAL, one CVE explained (CVE-2025-47273), no secrets in Git | `.github/workflows/ci-cd.yml`, [Security](#security) | [before](screenshots/06-trivy-backend-before-fix.png), [after](screenshots/06-trivy-images-clean.png), [in pipeline](screenshots/05-trivy-in-pipeline.png), [gitleaks](screenshots/06-secret-scan-gitleaks.png) |
 | **M7** Terraform | Valid HCL, init, plan (15 resources), VPC + 2 public subnets, EKS + node group, destroy, tfvars.example | `terraform/` | [init](screenshots/07-terraform-init-validate.png), [plan](screenshots/07-terraform-plan.png), [apply](screenshots/07-terraform-apply.png), [CLI](screenshots/07-aws-cli-vpc-eks.png), [Console VPC](screenshots/07-aws-console-vpc.png), [Console EKS](screenshots/07-aws-console-eks.png), [destroy](screenshots/07-terraform-destroy.png) |
 | **M8** Kubernetes + Helm | namespace.yaml, Helm chart, `helm upgrade --install`, 2 replicas each, ClusterIP, Ingress `/` + `/api`, pods Running, HPA | `k8s/`, `helm/lostfound/` | [pods](screenshots/08-kubectl-get-pods.png), [svc](screenshots/08-kubectl-get-svc.png), [helm list](screenshots/08-helm-list.png), [Ingress](screenshots/08-ingress-routing.png), [app via Ingress](screenshots/08-app-via-ingress-lostfound-local.png), [config + probes](screenshots/08-configmap-secret-pvc-probes.png), [HPA](screenshots/08-hpa-scaling.png) |
