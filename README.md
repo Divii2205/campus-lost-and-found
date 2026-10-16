@@ -1,17 +1,24 @@
-# Campus Lost & Found — DevOps Final Capstone
+# Campus Lost & Found: DevOps Final Capstone
 
 **Author:** Divijaa · **GitHub:** [Divii2205](https://github.com/Divii2205) · **Repo:** https://github.com/Divii2205/campus-lost-and-found
 
-Campus Lost & Found is a web app for a college campus. A student who **loses** something (a calculator, an ID card, keys) posts what it is and where they last had it. A student who **finds** something posts it too. Anyone can search the board, and when an item gets back to its owner it is marked **returned** (claimed).
+## In one minute
 
-This project takes that app all the way from code on a laptop to a monitored Kubernetes cluster:
+Campus Lost & Found is a website for a college campus.
+
+- A student who **loses** something (a calculator, an ID card, keys) writes what it is and where they last had it.
+- A student who **finds** something writes that down too.
+- Anyone can search the board.
+- When an item gets back to its owner, it is marked **returned** (claimed).
+
+This project is not only about the website. It shows every step that takes the code from a laptop to a real, watched server setup:
 
 ```text
 Code → Git → GitHub Actions (pytest → build → Trivy → GHCR) → Terraform (AWS VPC + EKS)
      → Kubernetes + Helm (Ingress, HPA, probes) → Prometheus + Grafana → Troubleshooting
 ```
 
-Every screenshot in this README is real output from this project, placed in the section it proves. The [grading checklist](#14-grading-checklist) at the end maps every line of `GRADING.md` to a file and a screenshot.
+Every screenshot in this README is real output from this project. Each one sits in the section it proves. The [grading checklist](#14-grading-checklist) near the end links every line of `GRADING.md` to a file and a screenshot.
 
 ## Table of contents
 
@@ -39,16 +46,18 @@ Every screenshot in this README is real output from this project, placed in the 
 
 | Who | What they can do |
 |---|---|
-| Student who lost something | Search the board. If it isn't there, post a **Lost** report with the place and a contact. |
-| Student who found something | Post a **Found** report so the owner knows where it is. |
-| Anyone | Filter by Lost / Found / Back with owner, search by text ("library", "keys"), edit or remove a report. |
-| Owner gets the item back | Click **Mark returned**, type the owner's name, and the item is stamped **Claimed**. |
+| Student who lost something | Search the board. If the item is not there, post a **Lost** report with the place and a way to contact them. |
+| Student who found something | Post a **Found** report so the owner knows where the item is. |
+| Anyone | Show only Lost, only Found or only Back with owner. Search by words ("library", "keys"). Edit or remove a report. |
+| Owner gets the item back | Click **Mark returned**, type the owner's name, and the item gets a **Claimed** stamp. |
 
-Each report is shown as a manila lost-property tag with an ink stamp: red **Lost**, green **Found**, blue **Claimed**.
+Each report looks like a paper lost property tag with an ink stamp: red **Lost**, green **Found**, blue **Claimed**.
 
 ![Campus Lost & Found running in the browser](screenshots/01-app-browser-localhost-3000.png)
 
 ## 2. Architecture
+
+This picture shows how all the parts connect. Read it from top to bottom.
 
 ```text
  Developer (Divijaa)
@@ -75,20 +84,30 @@ Each report is shown as a manila lost-property tag with an ink stamp: red **Lost
    Prometheus ── ServiceMonitor ──► backend /metrics          Grafana ── dashboard "Campus Lost & Found API"
 ```
 
+In plain words:
+
+1. Divijaa writes code and sends it to GitHub.
+2. GitHub Actions tests the code, builds the app boxes, checks them for security problems and stores them.
+3. Terraform builds the servers on AWS.
+4. Kubernetes runs the app boxes. Helm tells Kubernetes what to run.
+5. Prometheus and Grafana watch the app and draw charts.
+
 ## 3. Tech stack
 
-| Layer | Tool |
-|---|---|
-| Frontend | React 18 + Vite, plain CSS (responsive), served by unprivileged nginx |
-| Backend | FastAPI, SQLAlchemy 2, Pydantic, Uvicorn |
-| Database | PostgreSQL 16, Alembic migrations |
-| Tests | pytest + FastAPI TestClient, throwaway SQLite database |
-| Containers | Docker (non-root images), Docker Compose |
-| CI/CD | GitHub Actions, GitHub Container Registry (GHCR) |
-| Security | Trivy (image scan gate), gitleaks (secret scan) |
-| Infrastructure | Terraform + AWS (VPC, subnets, IGW, EKS, node group, IAM) |
-| Kubernetes | kind (local), Helm 3 chart, ingress-nginx, metrics-server, HPA |
-| Monitoring | kube-prometheus-stack (Prometheus Operator, Prometheus, Grafana) |
+Here is every tool, with one plain line about what it does.
+
+| Layer | Tool | What it means in plain words |
+|---|---|---|
+| Frontend | React 18 + Vite, plain CSS (responsive), served by unprivileged nginx | The page you see in the browser. React builds the page, Vite packs it, CSS makes it look nice on phones and laptops, and nginx is a small web server that hands the page to the browser. |
+| Backend | FastAPI, SQLAlchemy 2, Pydantic, Uvicorn | The part that answers requests. FastAPI is the Python web framework, SQLAlchemy talks to the database, Pydantic checks that incoming data is correct, and Uvicorn runs the server. |
+| Database | PostgreSQL 16, Alembic migrations | PostgreSQL stores all the reports. Alembic creates and updates the database tables from code. |
+| Tests | pytest + FastAPI TestClient, throwaway SQLite database | pytest runs automatic checks on the code. SQLite is a tiny database used only during tests and then thrown away. |
+| Containers | Docker (non-root images), Docker Compose | Docker puts the app in a box so it runs the same on every computer. Docker Compose starts several boxes together with one command. |
+| CI/CD | GitHub Actions, GitHub Container Registry (GHCR) | GitHub Actions is a robot that tests and builds the code every time it is pushed. GHCR is a shelf on GitHub where the built boxes are stored. |
+| Security | Trivy (image scan gate), gitleaks (secret scan) | Trivy looks inside each box for known security holes. gitleaks looks for passwords or keys saved by mistake. |
+| Infrastructure | Terraform + AWS (VPC, subnets, IGW, EKS, node group, IAM) | AWS is Amazon's cloud where you rent computers. Terraform writes down the servers you want in a file and then builds them for you. |
+| Kubernetes | kind (local), Helm 3 chart, ingress-nginx, metrics-server, HPA | Kubernetes runs many boxes and restarts them if they break. kind is a small Kubernetes on your own laptop. Helm is like an installer for apps on Kubernetes. ingress-nginx is the front door that sends visitors to the right part. metrics-server measures CPU use. The HPA adds more copies of the app when it gets busy. |
+| Monitoring | kube-prometheus-stack (Prometheus Operator, Prometheus, Grafana) | Prometheus collects numbers about the app every few seconds. Grafana turns those numbers into live charts. |
 
 ## 4. Folder structure
 
@@ -112,23 +131,41 @@ campus-lost-and-found/
 └── screenshots/
 ```
 
+| Folder | What is inside |
+|---|---|
+| `backend/` | The Python server, the database setup and the tests |
+| `frontend/` | The web page code |
+| `.github/workflows/` | The robot steps for GitHub Actions |
+| `terraform/` | The files that build the AWS servers |
+| `k8s/` | Basic Kubernetes files and the broken files used for practice |
+| `helm/lostfound/` | The Helm package that installs the whole app on Kubernetes |
+| `monitoring/` | Settings for Prometheus and Grafana |
+| `scripts/` | Small helper scripts |
+| `screenshots/` | Proof pictures used in this README |
+
 ## 5. Run it locally (M1)
 
-### Fastest: Docker Compose
+"Locally" means on your own computer.
+
+### Fastest way: Docker Compose
+
+One command starts the web page, the server and the database:
 
 ```bash
 docker compose up --build
 ```
 
-| URL | What |
+Then open these addresses in your browser:
+
+| URL | What you see |
 |---|---|
 | http://localhost:3000 | the app |
-| http://localhost:8000/docs | Swagger API docs |
-| http://localhost:8000/health | liveness (`{"status":"UP"}`) |
-| http://localhost:8000/ready | readiness (checks the database) |
-| http://localhost:8000/metrics | Prometheus metrics |
+| http://localhost:8000/docs | Swagger API docs (a page that lists every API call and lets you try it) |
+| http://localhost:8000/health | liveness (`{"status":"UP"}`), which means "the server is alive" |
+| http://localhost:8000/ready | readiness, which means "the server can reach the database" |
+| http://localhost:8000/metrics | Prometheus metrics (numbers about the app) |
 
-Stop with `docker compose down` (add `-v` to delete the database too).
+To stop everything, run `docker compose down`. Add `-v` to delete the saved database too.
 
 ### Backend without Docker
 
@@ -141,9 +178,11 @@ alembic upgrade head
 uvicorn app.main:app --reload --port 8000
 ```
 
-Frontend dev server: `cd frontend && npm ci && npm run dev` (proxies `/api` to port 8000).
+To run the web page in development mode: `cd frontend && npm ci && npm run dev`. It sends `/api` requests to port 8000.
 
 ### REST API
+
+An API is a list of addresses that the web page calls to read or change data. Each row below is one of them.
 
 | Method | Path | What it does |
 |---|---|---|
@@ -158,45 +197,53 @@ Frontend dev server: `cd frontend && npm ci && npm run dev` (proxies `/api` to p
 | DELETE | `/api/items/{id}` | remove a report |
 | GET | `/api/items/stats` | totals: lost, found, claimed |
 
-That is 7 item endpoints using GET, POST, PUT, PATCH and DELETE (the rubric asks for 4).
+That is 7 item endpoints. They use GET (read), POST (create), PUT (replace), PATCH (change one part) and DELETE (remove). The rubric asks for 4.
 
 ![Swagger docs](screenshots/01-swagger-docs.png)
 
-Every endpoint called with curl (create, read, update, claim, delete, filter, stats):
+Here every endpoint is called with curl (a command line tool that sends web requests): create, read, update, claim, delete, filter and stats.
 
 ![API CRUD with curl](screenshots/01-api-crud.png)
 
 ### Database and Alembic
 
-The `items` table is created by the Alembic migration `backend/alembic/versions/0001_create_items.py`. The backend container runs `alembic upgrade head` before it starts Uvicorn, and `alembic_version` shows the migration that was applied:
+The `items` table holds all the reports. It is created by the Alembic migration `backend/alembic/versions/0001_create_items.py`. A migration is a small script that sets up or changes the database tables.
+
+The backend box runs `alembic upgrade head` before it starts Uvicorn. The `alembic_version` table shows which migration was applied:
 
 ![PostgreSQL items table and Alembic version](screenshots/01-postgres-alembic.png)
 
 ## 6. Tests (M2)
+
+Tests are small programs that check the code works. Run them like this:
 
 ```bash
 cd backend
 pytest -v
 ```
 
-- **11 tests** covering `/health`, `/ready`, `/metrics` and every item endpoint: create, input validation (422), list + filter + search, get + 404, update, claim (and the 409 on a second claim), delete, stats.
-- `tests/conftest.py` swaps the database for a **fresh SQLite file per test** (FastAPI `dependency_overrides`), so tests never touch the real PostgreSQL database.
-- `pytest.ini` sets the Python path, the test folder and warning filters.
+- There are **11 tests**. They cover `/health`, `/ready`, `/metrics` and every item endpoint: create, input checking (422), list + filter + search, get + 404, update, claim (and the 409 error on a second claim), delete and stats.
+- `tests/conftest.py` swaps the real database for a **fresh SQLite file for each test** (using FastAPI `dependency_overrides`). So the tests never touch the real PostgreSQL database.
+- `pytest.ini` sets the Python path, the test folder and which warnings to hide.
 
 ![pytest -v: 11 passed](screenshots/02-pytest-passing.png)
 
-Tests run before any image is built. If a test fails, the pipeline stops and no broken image reaches the registry.
+The tests run before any box is built. If a test fails, the pipeline stops, and no broken box reaches the registry.
 
 ## 7. Git and GitHub (M3)
 
+Git saves every version of the code. GitHub keeps a copy of it online.
+
 - Repository: **https://github.com/Divii2205/campus-lost-and-found** (public)
-- Every commit is by **Divii2205**, and each message says what changed (for example "Add Alembic migration that creates the items table", "Remove pip and setuptools from backend runtime image to fix HIGH CVEs found by Trivy").
-- `.gitignore` excludes `.env`, `__pycache__/`, `node_modules/`, `.venv/`, `dist/`, Terraform state and `terraform.tfvars`.
-- `.gitattributes` keeps LF line endings, so shell scripts and YAML work the same on Windows and Linux.
+- There are 23 commits. Every commit is by **Divii2205**, and each message says what changed. For example: "Add Alembic migration that creates the items table" and "Remove pip and setuptools from backend runtime image to fix HIGH CVEs found by Trivy".
+- `.gitignore` tells Git to skip `.env`, `__pycache__/`, `node_modules/`, `.venv/`, `dist/`, Terraform state and `terraform.tfvars`.
+- `.gitattributes` keeps LF line endings, so shell scripts and YAML files work the same on Windows and Linux.
 
 ![Commit history](screenshots/03-git-log.png)
 
 ## 8. Docker (M4)
+
+Docker puts the app in a box (called an image) so it runs the same on every computer. A Dockerfile is the recipe for that box.
 
 | File | What it does |
 |---|---|
@@ -204,7 +251,12 @@ Tests run before any image is built. If a test fails, the pipeline stops and no 
 | `frontend/Dockerfile` | **multi-stage**: stage 1 `node:22-alpine` runs `npm ci && npm run build`; stage 2 `nginxinc/nginx-unprivileged` serves `dist/` as **uid 101** on port 8080. Node and the build tools never reach the final image. |
 | `docker-compose.yml` | postgres (with healthcheck and volume) → backend (waits for postgres to be healthy) → frontend on **localhost:3000** |
 
-`docker compose up --build` starts all three services. `id` inside the containers shows both run as non-root:
+Some simple words for the table:
+
+- **Non-root** means the app does not run as the all-powerful admin user. This is safer.
+- **Multi-stage** means the first stage builds the page, and only the finished result is copied into a small second box.
+
+`docker compose up --build` starts all three services. Running `id` inside the boxes shows both run as non-root:
 
 ![docker compose up --build](screenshots/04-docker-compose-up.png)
 
@@ -212,30 +264,38 @@ The browser at http://localhost:3000 is the screenshot in [section 1](#1-what-th
 
 ## 9. CI/CD pipeline (M5)
 
+CI/CD means a robot tests, builds and ships the code every time you push. Here the robot is GitHub Actions.
+
 File: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml). It runs on **every push to `main`** (and on pull requests to `main`).
 
-| Job | Steps | Fails the build when |
+| Job | Steps | The build fails when |
 |---|---|---|
-| `test` | checkout → Python 3.12 → `pip install` → **`pytest -v`** → Node 22 → **`npm ci && npm run build`** | any test fails or the frontend doesn't compile |
+| `test` | checkout → Python 3.12 → `pip install` → **`pytest -v`** → Node 22 → **`npm ci && npm run build`** | any test fails or the frontend does not compile |
 | `build-scan-push` (needs `test`) | build **both** images → **Trivy** scan both → log in to GHCR → **push** | Trivy finds a fixable HIGH/CRITICAL CVE |
-| `deploy` (needs `build-scan-push`, `main` only) | `helm upgrade --install` with the new SHA → `kubectl rollout status` | the rollout doesn't become healthy |
+| `deploy` (needs `build-scan-push`, `main` only) | `helm upgrade --install` with the new SHA → `kubectl rollout status` | the rollout does not become healthy |
 
-**Image tags are the Git commit SHA**, never `latest`:
+**Image tags are the Git commit SHA**, never `latest`. A SHA is the unique id Git gives each commit.
 
 ```text
 ghcr.io/divii2205/lostfound-backend:<github.sha>
 ghcr.io/divii2205/lostfound-frontend:<github.sha>
 ```
 
-So every running container can be traced back to the exact commit it was built from. The owner is lowercased (`Divii2205` → `divii2205`) because GHCR only accepts lowercase names. The Helm chart refuses to render without a tag (`required "backend.tag must be set to a Git commit SHA"`).
+Why this helps:
 
-The `deploy` job runs when the repo has a `KUBE_CONFIG` secret (a base64 kubeconfig, for example for the EKS cluster). Without it the job prints a skip message, and the images still land in GHCR. For the local kind cluster, `scripts/deploy-local.sh` runs the same Helm command.
+- Every running box can be traced back to the exact commit it was built from.
+- The owner name is made lowercase (`Divii2205` → `divii2205`) because GHCR only accepts lowercase names.
+- The Helm chart refuses to work without a tag (`required "backend.tag must be set to a Git commit SHA"`).
 
-The workflow passes `actionlint` (the GitHub Actions linter), and these are its key lines:
+The `deploy` job runs only when the repo has a `KUBE_CONFIG` secret. This is a base64 kubeconfig, which is the login file for a cluster (for example the EKS cluster). Without it, the job prints a skip message, and the images still land in GHCR. For the local kind cluster, `scripts/deploy-local.sh` runs the same Helm command.
+
+The workflow passes `actionlint` (a checker for GitHub Actions files). These are its key lines:
 
 ![actionlint + key workflow lines](screenshots/05-ci-workflow-lint.png)
 
 ### Pipeline run on GitHub
+
+> **To be filled in after the first push.**
 
 - Actions run (green): **`<add link after the first push>`**
 - GHCR packages with SHA tags: `screenshots/05-ghcr-packages.png` *(added after the first push)*
@@ -243,40 +303,64 @@ The workflow passes `actionlint` (the GitHub Actions linter), and these are its 
 
 ## 10. Security scanning (M6)
 
-**Trivy in the pipeline.** Both images are scanned in `build-scan-push` with
+**Trivy in the pipeline.** Trivy looks inside each box for known security holes (called CVEs). Both images are scanned in `build-scan-push` with:
 
 ```text
 trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 <image>
 ```
 
-`--exit-code 1` makes the step (and the pipeline) **fail** when a fixable HIGH or CRITICAL vulnerability is found, so the image is never pushed. Trivy runs from the official `aquasec/trivy:0.65.0` container, pinned to a version.
+`--exit-code 1` makes the step (and the whole pipeline) **fail** when a fixable HIGH or CRITICAL hole is found. So a risky image is never pushed. Trivy runs from the official `aquasec/trivy:0.65.0` container, fixed to one version.
 
-**A real finding and its fix.** The first backend image **failed** the gate with 4 HIGH vulnerabilities:
+**A real finding and its fix.** The first backend image **failed** the check with 4 HIGH problems:
 
 ![Trivy: backend image before the fix](screenshots/06-trivy-backend-before-fix.png)
 
-> **What Trivy scanned and what the result means.** Trivy looked at the Debian OS packages and all 37 Python packages inside the backend image. It found 4 HIGH CVEs, for example **CVE-2025-47273**, a path-traversal bug in **setuptools 70.3.0** where a crafted package URL can write files outside the target folder (fixed in 78.1.1), plus two urllib3 CVEs and one msgpack CVE. None of these were app dependencies: they were **pip and setuptools** (and the libraries pip bundles) left in the image from the install step. The app never needs them at runtime, so the Dockerfile now uninstalls them after `pip install`. The rescan is clean: 0 HIGH/CRITICAL in both images, and the gate passes.
+> **What Trivy scanned and what the result means.**
+> Trivy looked at the Debian OS packages and all 37 Python packages inside the backend image. It found 4 HIGH CVEs.
+> One example is **CVE-2025-47273**. It is a path traversal bug in **setuptools 70.3.0**. A specially made package address can write files outside the folder it should stay in. It is fixed in 78.1.1.
+> The other three were two urllib3 CVEs and one msgpack CVE.
+> None of these were the app's own libraries. They came from **pip and setuptools** (and the libraries pip carries with it), which were left in the image after the install step.
+> The app never needs them while it runs, so the Dockerfile now removes them after `pip install`.
+> The new scan is clean: 0 HIGH/CRITICAL in both images, and the check passes.
 
 ![Trivy: both images clean after the fix](screenshots/06-trivy-images-clean.png)
 
-**No secrets in Git.** gitleaks scanned the whole history, and no secret files are tracked. AWS keys live only in `~/.aws/credentials` (from `aws configure`), and the database password in Kubernetes is a Secret set by Helm.
+**No secrets in Git.** gitleaks checked the whole history, and no secret files are saved in Git. AWS keys live only in `~/.aws/credentials` (made by `aws configure`). The database password in Kubernetes is a Secret set by Helm.
 
 ![gitleaks: no leaks found](screenshots/06-secret-scan-gitleaks.png)
 
-Trivy is one security layer. Others: SAST (code scanning such as Bandit), dependency scanning (`npm audit` and Trivy fs), secret scanning (gitleaks), and runtime security (non-root containers, `allowPrivilegeEscalation: false`).
+Trivy is one layer of safety. Other layers are:
+
+| Layer | What it does |
+|---|---|
+| SAST (for example Bandit) | reads the code itself to find unsafe patterns |
+| Dependency scanning (`npm audit` and Trivy fs) | checks the libraries the code uses |
+| Secret scanning (gitleaks) | finds passwords or keys saved by mistake |
+| Runtime security | non-root containers and `allowPrivilegeEscalation: false`, so a box cannot give itself more power |
 
 ## 11. Terraform on AWS (M7)
+
+Terraform writes down the servers you want in files, then builds them on AWS for you. AWS is Amazon's cloud where you rent computers.
 
 Folder: [`terraform/`](terraform). Region **ap-south-1 (Mumbai)**.
 
 | File | Creates |
 |---|---|
 | `main.tf` | VPC `10.30.0.0/16`, internet gateway, **2 public subnets** in 2 availability zones (tagged for EKS load balancers), public route table + associations |
-| `eks.tf` | IAM role for the control plane, **EKS cluster `lostfound-eks`** (standard support only, so no extended-support charges), IAM role for nodes, **managed node group** (1× t3.small, scales 1-2) |
+| `eks.tf` | IAM role for the control plane, **EKS cluster `lostfound-eks`** (standard support only, so no extended support charges), IAM role for nodes, **managed node group** (1× t3.small, scales 1 to 2) |
 | `variables.tf` / `terraform.tfvars.example` | region, CIDRs, instance type, node count. **No credentials anywhere**: Terraform reads them from `aws configure`. |
 | `outputs.tf` | VPC id, subnet ids, cluster endpoint, and the `aws eks update-kubeconfig` command |
 
-Cost choice: no NAT gateway. The worker node sits in a public subnet, so this demo costs roughly $0.15 per hour and is destroyed right after the screenshots.
+Simple words for the table:
+
+- **VPC**: your own private network inside AWS.
+- **Subnet**: a smaller part of that network. "Public" means it can reach the internet.
+- **Internet gateway (IGW)**: the door between the network and the internet.
+- **EKS**: Kubernetes run by AWS.
+- **Node group**: the actual computers that run the app boxes.
+- **IAM role**: a set of permissions that says what a service is allowed to do.
+
+**Cost choice:** there is no NAT gateway. The worker computer sits in a public subnet. So this demo costs about $0.15 per hour, and it is destroyed right after the screenshots.
 
 ```bash
 cd terraform
@@ -288,17 +372,27 @@ aws eks update-kubeconfig --region ap-south-1 --name lostfound-eks
 terraform destroy
 ```
 
+| Command | What it does |
+|---|---|
+| `terraform init` | downloads what Terraform needs |
+| `terraform validate` | checks the files are written correctly |
+| `terraform plan` | shows what will be built, without building it |
+| `terraform apply` | builds it |
+| `terraform destroy` | deletes everything so it stops costing money |
+
 ![terraform init + validate](screenshots/07-terraform-init-validate.png)
 
 `terraform plan`: 15 resources to add, 0 errors:
 
 ![terraform plan](screenshots/07-terraform-plan.png)
 
-*Apply, AWS Console and destroy screenshots are added in the next step (`07-terraform-apply.png`, `07-aws-console-vpc.png`, `07-aws-console-eks.png`, `07-terraform-destroy.png`).*
+> **To be added in the next step:** Apply, AWS Console and destroy screenshots are added in the next step (`07-terraform-apply.png`, `07-aws-console-vpc.png`, `07-aws-console-eks.png`, `07-terraform-destroy.png`).
 
 ## 12. Kubernetes + Helm (M8)
 
-Local cluster: **kind** (`k8s/kind-config.yaml`, cluster `session21`) with **ingress-nginx** and **metrics-server**. The same chart deploys to EKS.
+Kubernetes runs the app boxes and restarts them if they break. Helm is like an installer: one command sets up every part of the app.
+
+Local cluster: **kind** (`k8s/kind-config.yaml`, cluster `session21`), with **ingress-nginx** (the front door) and **metrics-server** (measures CPU). The same chart also deploys to EKS.
 
 ```bash
 kubectl apply -f k8s/namespace.yaml                   # namespace "lostfound"
@@ -318,13 +412,29 @@ What the chart (`helm/lostfound/`) creates:
 | `config.yaml` | ConfigMap (app name, environment) + **Secret** (DB user, password, `DATABASE_URL`) |
 | `ingress.yaml` | Ingress `lostfound.local`: **`/` → frontend, `/api` → backend** |
 | `hpa.yaml` | HPA: backend 2 → 5 pods at 60% CPU |
-| `servicemonitor.yaml` | tells Prometheus to scrape `backend /metrics` every 15s |
+| `servicemonitor.yaml` | tells Prometheus to read `backend /metrics` every 15s |
 
-All pods **Running**, 2 replicas each for backend and frontend, 0 restarts:
+Simple words for the table:
+
+| Word | Meaning |
+|---|---|
+| Pod | one running copy of an app box |
+| Deployment | keeps the right number of pods running |
+| Replica | one copy; 2 replicas means 2 copies |
+| Service (ClusterIP) | a fixed inside address that reaches the pods |
+| Ingress | the front door that sends `/` and `/api` to the right place |
+| initContainer | a small helper that runs first, before the main app starts |
+| Probe | a regular health check Kubernetes does on a pod |
+| ConfigMap | normal settings |
+| Secret | private settings, like passwords |
+| PVC | saved disk space, so the database keeps its data after a restart |
+| HPA | adds more pods when CPU gets busy, and removes them later |
+
+All pods are **Running**, with 2 copies each for backend and frontend, and 0 restarts:
 
 ![kubectl get pods](screenshots/08-kubectl-get-pods.png)
 
-ClusterIP Services and their endpoints:
+ClusterIP Services and the pods behind them (endpoints):
 
 ![kubectl get svc](screenshots/08-kubectl-get-svc.png)
 
@@ -334,7 +444,7 @@ Ingress routing (`/api` → backend pods, `/` → frontend pods):
 
 ![Ingress routing](screenshots/08-ingress-routing.png)
 
-The app opened through the Ingress host **http://lostfound.local** (add `127.0.0.1 lostfound.local` to your hosts file):
+The app opened through the Ingress address **http://lostfound.local** (add `127.0.0.1 lostfound.local` to your hosts file first):
 
 ![App through the Ingress](screenshots/08-app-via-ingress-lostfound-local.png)
 
@@ -342,11 +452,13 @@ ConfigMap, Secret, PVC and the three probes:
 
 ![ConfigMap, Secret, PVC, probes](screenshots/08-configmap-secret-pvc-probes.png)
 
-**HPA.** Under `scripts/load-test.sh` the backend CPU went above 60% of its request, and the HPA scaled it from 2 to 3 pods ("New size: 3; reason: cpu resource utilization above target"):
+**HPA.** While `scripts/load-test.sh` sent lots of traffic, the backend CPU went above 60% of its request. The HPA then grew it from 2 to 3 pods ("New size: 3; reason: cpu resource utilization above target"):
 
 ![HPA scaling](screenshots/08-hpa-scaling.png)
 
 ## 13. Monitoring (M9)
+
+Monitoring means watching the app while it runs. Prometheus collects numbers about the app every few seconds. Grafana turns those numbers into live charts.
 
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -359,23 +471,27 @@ kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3001:80
 kubectl get secret -n monitoring kube-prometheus-stack-grafana -o jsonpath='{.data.admin-password}' | base64 -d
 ```
 
-- `prometheus-values.yaml` lets Prometheus pick up ServiceMonitors from every namespace, and turns off parts a small cluster doesn't need.
-- `grafana-values.yaml` turns on the dashboard sidecar. No admin password is committed: the chart generates one into a Secret.
-- `grafana-dashboard.yaml` is a ConfigMap with the dashboard. Grafana loads it automatically.
+| File | What it does |
+|---|---|
+| `prometheus-values.yaml` | lets Prometheus find ServiceMonitors in every namespace, and turns off parts a small cluster does not need |
+| `grafana-values.yaml` | turns on the dashboard helper (sidecar). No admin password is saved in Git: the chart makes one and keeps it in a Secret. |
+| `grafana-dashboard.yaml` | a ConfigMap that holds the dashboard. Grafana loads it by itself. |
 
-`/metrics` returns Prometheus text format: request counts per route, method and status, plus latency histograms:
+`/metrics` gives numbers in the Prometheus text format: how many requests came in for each route, method and status, plus how long they took (latency histograms):
 
 ![curl /metrics](screenshots/09-metrics-endpoint.png)
 
-Prometheus **Targets**: every backend pod found by the ServiceMonitor is **UP** (3/3 while the HPA had scaled up):
+Prometheus **Targets**: every backend pod found by the ServiceMonitor is **UP** (3/3 while the HPA had grown the backend):
 
 ![Prometheus targets UP](screenshots/09-prometheus-targets-up.png)
 
-Grafana dashboard **Campus Lost & Found API** with live data during the load test: requests per second by route, p95 latency, error rate (the load test asks for a missing item on purpose, giving 404s), backend pods up, and CPU per pod:
+The Grafana dashboard **Campus Lost & Found API** with live data during the load test. It shows requests per second for each route, p95 latency (95 out of 100 requests were faster than this), error rate (the load test asks for a missing item on purpose, which gives 404s), backend pods up, and CPU for each pod:
 
 ![Grafana dashboard](screenshots/09-grafana-dashboard.png)
 
 ## 14. Grading checklist
+
+This table links each rubric line in `GRADING.md` to the file or screenshot that proves it.
 
 | Module | Rubric line | Where |
 |---|---|---|
@@ -389,7 +505,7 @@ Grafana dashboard **Campus Lost & Found API** with live data during the load tes
 | | Test DB, not production | `backend/tests/conftest.py` (SQLite per test) |
 | | pytest.ini / conftest.py | both present |
 | **M3** | Public GitHub repo | https://github.com/Divii2205/campus-lost-and-found |
-| | Meaningful commits (≥ 10) | [git log](screenshots/03-git-log.png) |
+| | Meaningful commits (≥ 10) | 23 commits, [git log](screenshots/03-git-log.png) |
 | | .gitignore: .env, \_\_pycache\_\_, node_modules, .venv | `.gitignore` |
 | **M4** | backend/Dockerfile builds | [compose](screenshots/04-docker-compose-up.png) |
 | | frontend multi-stage (Node → nginx) | `frontend/Dockerfile` |
@@ -404,43 +520,43 @@ Grafana dashboard **Campus Lost & Found API** with live data during the load tes
 
 ## 15. Troubleshooting
 
-Real problems found while building this project, with the cause, fix and proof.
+These are real problems found while building this project. Each one lists what went wrong, why, the fix and the proof.
 
-### 15.1 Backend crash-looped on the first Helm install
+### 15.1 Backend kept crashing on the first Helm install
 
-- **Symptom:** backend pods `Running` but with **4 restarts** right after `helm install`.
+- **What we saw:** backend pods were `Running` but had **4 restarts** right after `helm install`.
 - **Logs:** `psycopg.OperationalError: connection failed ... port 5432 failed: Connection refused`
-- **Cause:** both pods start at the same time. The backend runs `alembic upgrade head` before PostgreSQL accepts connections, the migration fails, the container exits, and Kubernetes restarts it until the database is up.
+- **Why:** both pods start at the same time. The backend runs `alembic upgrade head` before PostgreSQL is ready to accept connections. The migration fails, the box stops, and Kubernetes restarts it again and again until the database is up.
 
 ![Backend restarts before the fix](screenshots/11-troubleshoot-backend-restarts-before.png)
 
-- **Fix:** a `wait-for-db` **initContainer** in `templates/backend.yaml` loops on `pg_isready` until the database answers. (A first try printed `no attempt`, because uid 10001 has no user entry in the postgres image, so `pg_isready` needs `-U lostfound`.)
-- **Proof:** a clean reinstall plus a deliberate database restart. The init log shows "waiting for db … accepting connections", and every pod has 0 restarts.
+- **Fix:** a `wait-for-db` **initContainer** in `templates/backend.yaml`. It runs `pg_isready` over and over until the database answers. (The first try printed `no attempt`. This was because uid 10001 has no user entry in the postgres image, so `pg_isready` needs `-U lostfound`.)
+- **Proof:** a clean reinstall plus a planned database restart. The init log shows "waiting for db … accepting connections", and every pod has 0 restarts.
 
 ![Backend after the fix](screenshots/11-troubleshoot-backend-restarts-after.png)
 
-### 15.2 Trivy gate failed on the backend image
+### 15.2 Trivy check failed on the backend image
 
-See [section 10](#10-security-scanning-m6): pip and setuptools left in the image carried 4 HIGH CVEs. Fixed by uninstalling them after the install step.
+See [section 10](#10-security-scanning-m6). pip and setuptools were left in the image and carried 4 HIGH CVEs. The fix was to remove them after the install step.
 
-### 15.3 Lab: ImagePullBackOff (`k8s/troubleshooting/broken-image.yaml`)
+### 15.3 Practice: ImagePullBackOff (`k8s/troubleshooting/broken-image.yaml`)
 
-`kubectl describe pod` shows the tag `does-not-exist` can't be pulled. The fix is `kubectl set image` to a real commit-SHA tag.
+ImagePullBackOff means Kubernetes cannot download the image. `kubectl describe pod` shows the tag `does-not-exist` cannot be pulled. The fix is `kubectl set image` with a real commit SHA tag.
 
 ![ImagePullBackOff and fix](screenshots/11-troubleshoot-imagepullbackoff.png)
 
-### 15.4 Lab: Service with no endpoints (`k8s/troubleshooting/broken-service.yaml`)
+### 15.4 Practice: Service with no endpoints (`k8s/troubleshooting/broken-service.yaml`)
 
-The Service selects `app=lostfound-api`, but the pods are labelled `app=lostfound-backend`, so there are no endpoints and no traffic. Fixing the selector fills in the endpoints.
+The Service looks for pods with `app=lostfound-api`, but the pods are labelled `app=lostfound-backend`. So the Service finds no pods (no endpoints) and no traffic gets through. Fixing the selector fills in the endpoints.
 
 ![Service no endpoints and fix](screenshots/11-troubleshoot-service-no-endpoints.png)
 
-### 15.5 Smaller ones
+### 15.5 Smaller problems
 
-| Problem | Cause | Fix |
+| Problem | Why | Fix |
 |---|---|---|
-| `vite build` failed on the Windows laptop: `@rollup/rollup-win32-x64-msvc ... blocked by Application Control policy` | Windows blocks the native Rollup binary | build inside `node:22-alpine` (same as the Dockerfile and CI) |
-| Grafana panels empty on first load | panels relied on the "default" datasource | each panel now names the datasource `uid: prometheus` |
+| `vite build` failed on the Windows laptop: `@rollup/rollup-win32-x64-msvc ... blocked by Application Control policy` | Windows blocks the native Rollup program | build inside `node:22-alpine` (same as the Dockerfile and CI) |
+| Grafana panels were empty on first load | panels relied on the "default" data source | each panel now names the data source `uid: prometheus` |
 | GHCR rejects `ghcr.io/Divii2205/...` | GHCR needs lowercase names | workflow uses `${GITHUB_REPOSITORY_OWNER,,}` |
 
 ## 16. Final demo script (M10)
@@ -452,15 +568,15 @@ Live (or recorded if remote). About 10 minutes.
 3. **Database:** `kubectl exec -n lostfound deploy/lostfound-postgres -- psql -U lostfound -d lostfound -c 'select id,status,title from items;'`
 4. **Change + commit:** edit a line in `frontend/src/App.jsx`, `git commit -am "..."`, `git push`.
 5. **CI:** open the Actions tab and watch `test` → `build-scan-push` (Trivy) → `deploy`.
-6. **Registry:** GHCR packages page, where the new tag equals the commit SHA.
+6. **Registry:** the GHCR packages page, where the new tag is the same as the commit SHA.
 7. **Terraform:** walk through `terraform/main.tf` and `eks.tf`, then the plan screenshot.
-8. **Kubernetes + Helm:** `kubectl get pods,svc,ingress,hpa -n lostfound`, `helm history lostfound -n lostfound` (a new revision per deploy).
+8. **Kubernetes + Helm:** `kubectl get pods,svc,ingress,hpa -n lostfound`, `helm history lostfound -n lostfound` (a new revision for each deploy).
 9. **Updated page:** refresh http://lostfound.local and the change is live.
 10. **HPA:** `./scripts/load-test.sh 4000 40` and `kubectl get hpa -n lostfound -w`.
 11. **Monitoring:** Prometheus targets UP, Grafana panels moving.
 12. **Failure:** `kubectl apply -f k8s/troubleshooting/broken-service.yaml`, find the empty endpoints, fix the selector.
 
-This flow was rehearsed locally. The commit "Reword the hero line…" went through pytest, the frontend build, both image builds with its SHA, both Trivy gates and `helm upgrade` (revision 2):
+This flow was practiced on the laptop. The commit "Reword the hero line…" went through pytest, the frontend build, both image builds with its SHA, both Trivy checks and `helm upgrade` (revision 2):
 
 ![Demo: commit to deploy](screenshots/10-demo-commit-to-deploy.png)
 
@@ -470,8 +586,8 @@ The page after the upgrade shows the new line ("Search the board before you repo
 
 ## 17. Lessons learned
 
-- **Readiness is not liveness.** `/health` only says the process is up. `/ready` checks the database, so Kubernetes sends traffic only to pods that can serve it.
-- **Start order matters.** `depends_on: service_healthy` handles it in Compose. Kubernetes has no start order, so an initContainer does the waiting.
-- **Most CVEs come from what you didn't mean to ship.** The app's own dependencies were clean; the HIGH CVEs came from build tools left in the image.
-- **SHA tags make deploys traceable.** `kubectl get deploy -o wide` shows the exact commit that is running, and `helm rollback` returns to a known one.
-- **Infrastructure costs money while it exists.** Choosing no NAT gateway, one small node and destroying right after the demo keeps the AWS bill under a dollar.
+- **Ready is not the same as alive.** `/health` only says the program is running. `/ready` also checks the database, so Kubernetes sends visitors only to pods that can really help them.
+- **Start order matters.** In Compose, `depends_on: service_healthy` handles it. Kubernetes has no start order, so an initContainer does the waiting.
+- **Most security holes come from things you did not mean to ship.** The app's own libraries were clean. The HIGH CVEs came from build tools left in the image.
+- **SHA tags make deploys easy to trace.** `kubectl get deploy -o wide` shows the exact commit that is running, and `helm rollback` goes back to a known good one.
+- **Cloud servers cost money while they exist.** No NAT gateway, one small computer and deleting everything right after the demo keep the AWS bill under a dollar.
