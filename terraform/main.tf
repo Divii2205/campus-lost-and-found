@@ -1,10 +1,13 @@
-# Network: one VPC with two public subnets in two availability zones.
-# No NAT gateway on purpose: nodes sit in public subnets, which keeps this demo cheap.
+# the network is one vpc with two public subnets in two availability zones
+# there is no nat gateway on purpose because the machines sit in public subnets
+# this keeps the demo cheap
 
+# ask aws which availability zones we can use
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
+# our own private network in aws
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
@@ -13,12 +16,14 @@ resource "aws_vpc" "main" {
   tags = { Name = "lostfound-vpc" }
 }
 
+# the door between our network and the internet
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = { Name = "lostfound-igw" }
 }
 
+# one public subnet for each address range in the list
 resource "aws_subnet" "public" {
   count = length(var.public_subnet_cidrs)
 
@@ -27,13 +32,15 @@ resource "aws_subnet" "public" {
   availability_zone       = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = true
 
+  # the elb tag tells kubernetes to put public load balancers in these subnets
   tags = {
     Name                                        = "lostfound-public-${count.index + 1}"
-    "kubernetes.io/role/elb"                    = "1" # public load balancers go here
+    "kubernetes.io/role/elb"                    = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }
 }
 
+# send all internet traffic through the internet gateway
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
@@ -45,6 +52,7 @@ resource "aws_route_table" "public" {
   tags = { Name = "lostfound-public-rt" }
 }
 
+# link each public subnet to the route table above
 resource "aws_route_table_association" "public" {
   count = length(aws_subnet.public)
 

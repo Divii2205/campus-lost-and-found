@@ -1,3 +1,4 @@
+# the deployment runs the website pods
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,6 +17,7 @@ spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets: {{- toYaml . | nindent 8 }}
       {{- end }}
+      # never run as the root user
       securityContext:
         runAsNonRoot: true
         runAsUser: 101
@@ -25,6 +27,7 @@ spec:
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           ports:
             - { name: http, containerPort: 8080 }
+          # checks that the website answers before and while it gets traffic
           readinessProbe:
             httpGet: { path: /, port: http }
             initialDelaySeconds: 3
@@ -37,6 +40,7 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
 ---
+# the service gives the website pods one stable address inside the cluster
 apiVersion: v1
 kind: Service
 metadata:

@@ -1,3 +1,6 @@
+# settings you can change without editing the other files
+# each one has a default value
+
 variable "aws_region" {
   description = "AWS region for all resources"
   type        = string

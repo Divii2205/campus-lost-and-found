@@ -1,46 +1,63 @@
-# Image tags are always a Git commit SHA. CI passes them with --set backend.tag=<sha>.
+# default settings for the helm chart
+# image tags are always a git commit sha
+# the ci pipeline passes them in with the set flag
+# the api settings
 backend:
   image: ghcr.io/divii2205/lostfound-backend
-  tag: ""            # required: set to the commit SHA
+  # required and must be set to the commit sha
+  tag: ""
+  # how many copies of the api to run
   replicas: 2
+  # the cpu and memory each pod asks for and the most it may use
   resources:
     requests: { cpu: 100m, memory: 192Mi }
     limits: { cpu: 500m, memory: 384Mi }
 
+# the website settings
 frontend:
   image: ghcr.io/divii2205/lostfound-frontend
-  tag: ""            # required: set to the commit SHA
+  # required and must be set to the commit sha
+  tag: ""
   replicas: 2
   resources:
     requests: { cpu: 50m, memory: 64Mi }
     limits: { cpu: 200m, memory: 128Mi }
 
+# only download an image if the node does not have it yet
 imagePullPolicy: IfNotPresent
 imagePullSecrets: []
 
+# normal settings that are not secret
 config:
   appName: "Campus Lost & Found API"
   environment: kubernetes
 
+# the database settings
 postgres:
   image: postgres:16-alpine
   database: lostfound
   username: lostfound
-  password: change-me     # override with --set postgres.password=... ; stored in a Secret
+  # change this with the set flag when you install
+  # it is kept in a kubernetes secret
+  password: change-me
   storage: 1Gi
 
+# the ingress sends web traffic from the host name into the app
 ingress:
   enabled: true
   className: nginx
   host: lostfound.local
 
+# the hpa adds or removes api pods based on cpu use
 hpa:
   enabled: true
   minReplicas: 2
   maxReplicas: 5
   targetCPUUtilizationPercentage: 60
 
+# let prometheus find and read the api metrics
 monitoring:
   serviceMonitor:
     enabled: true
-    releaseLabel: kube-prometheus-stack   # must match the Prometheus Operator release
+    # must match the name of the prometheus operator release
+    releaseLabel: kube-prometheus-stack

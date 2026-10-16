@@ -1,4 +1,4 @@
-# Non-secret settings
+# settings that are not secret
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -8,7 +8,7 @@ data:
   APP_NAME: {{ .Values.config.appName | quote }}
   ENVIRONMENT: {{ .Values.config.environment | quote }}
 ---
-# Database credentials and connection string
+# the database login and the full database address kept as a secret
 apiVersion: v1
 kind: Secret
 metadata:

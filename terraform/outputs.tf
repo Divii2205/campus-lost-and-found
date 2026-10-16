@@ -1,3 +1,5 @@
+# values terraform prints after apply so you can find what it made
+
 output "vpc_id" {
   value = aws_vpc.main.id
 }
@@ -22,6 +24,7 @@ output "node_group_status" {
   value = aws_eks_node_group.main.status
 }
 
+# a ready command that connects kubectl to the new cluster
 output "configure_kubectl" {
   value = "aws eks update-kubeconfig --region ${var.aws_region} --name ${aws_eks_cluster.main.name}"
 }

@@ -1,38 +1,49 @@
-# Full local stack: docker compose up --build  ->  http://localhost:3000
+# runs the whole app on your computer
+# start it with docker compose up and the build flag and then open localhost port 3000
 services:
+  # the database
   postgres:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: lostfound
       POSTGRES_USER: lostfound
-      POSTGRES_PASSWORD: lostfound   # local demo only; Kubernetes uses a Secret
+      # this password is only for the local demo and kubernetes uses a secret instead
+      POSTGRES_PASSWORD: lostfound
     ports:
       - "5432:5432"
+    # keep the data even when the container stops
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    # check that the database is ready to take connections
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U lostfound -d lostfound"]
       interval: 5s
       retries: 10
 
+  # the api
   backend:
     build: ./backend
     environment:
       DATABASE_URL: postgresql+psycopg://lostfound:lostfound@postgres:5432/lostfound
       ENVIRONMENT: docker-compose
+    # wait until the database is healthy before starting the api
     depends_on:
       postgres:
         condition: service_healthy
+    # start again if it crashes
     restart: on-failure
     ports:
       - "8000:8000"
 
+  # the website
   frontend:
     build: ./frontend
     depends_on:
       - backend
     ports:
+      # port 3000 on your computer goes to port 8080 in the container
       - "3000:8080"
 
+# named storage for the database files
 volumes:
   postgres-data:

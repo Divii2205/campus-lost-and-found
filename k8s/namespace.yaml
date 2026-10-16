@@ -1,3 +1,4 @@
+# a namespace is a separate space in the cluster just for this app
 apiVersion: v1
 kind: Namespace
 metadata:

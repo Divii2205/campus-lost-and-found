@@ -1,5 +1,7 @@
-# Troubleshooting lab 2: the selector matches no Pod labels -> Service has no endpoints
-# Investigate: kubectl get endpoints -n lostfound ; kubectl get pods -n lostfound --show-labels
+# troubleshooting lab two
+# the selector does not match any pod labels so the service has no endpoints
+# to look into it run kubectl get endpoints and then kubectl get pods with show labels
+# both in the lostfound namespace
 apiVersion: v1
 kind: Service
 metadata:
@@ -7,7 +9,8 @@ metadata:
   namespace: lostfound
 spec:
   selector:
-    app: lostfound-api   # wrong: the backend Pods are labelled app=lostfound-backend
+    # this is wrong on purpose because the backend pods have the label lostfound backend
+    app: lostfound-api
   ports:
     - port: 8000
       targetPort: 8000

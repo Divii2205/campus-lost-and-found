@@ -1,6 +1,6 @@
-# EKS control plane + one managed node group
+# the eks cluster brain and one group of worker machines that aws manages
 
-# IAM role the EKS control plane uses
+# the iam role that the eks cluster brain uses
 resource "aws_iam_role" "cluster" {
   name = "${var.cluster_name}-cluster-role"
 
@@ -14,29 +14,32 @@ resource "aws_iam_role" "cluster" {
   })
 }
 
+# give the cluster role the standard eks cluster permissions
 resource "aws_iam_role_policy_attachment" "cluster_policy" {
   role       = aws_iam_role.cluster.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
+# the eks cluster itself
 resource "aws_eks_cluster" "main" {
   name     = var.cluster_name
   version  = var.kubernetes_version
   role_arn = aws_iam_role.cluster.arn
 
+  # put the cluster in our public subnets and allow access from inside and outside
   vpc_config {
     subnet_ids              = aws_subnet.public[*].id
     endpoint_public_access  = true
     endpoint_private_access = true
   }
 
-  # whoever runs terraform apply becomes cluster admin (for kubectl)
+  # the person who runs terraform apply becomes the cluster admin so kubectl works
   access_config {
     authentication_mode                         = "API_AND_CONFIG_MAP"
     bootstrap_cluster_creator_admin_permissions = true
   }
 
-  # standard support only: no paid extended support
+  # use standard support only and not the paid extended support
   upgrade_policy {
     support_type = "STANDARD"
   }
@@ -44,7 +47,7 @@ resource "aws_eks_cluster" "main" {
   depends_on = [aws_iam_role_policy_attachment.cluster_policy]
 }
 
-# IAM role the worker nodes use
+# the iam role that the worker machines use
 resource "aws_iam_role" "node" {
   name = "${var.cluster_name}-node-role"
 
@@ -58,6 +61,7 @@ resource "aws_iam_role" "node" {
   })
 }
 
+# give the worker role what it needs to join the cluster and set up networking and pull images
 resource "aws_iam_role_policy_attachment" "node" {
   for_each = toset([
     "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
@@ -69,6 +73,7 @@ resource "aws_iam_role_policy_attachment" "node" {
   policy_arn = each.value
 }
 
+# the group of worker machines that run our pods
 resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "${var.cluster_name}-nodes"
@@ -77,12 +82,14 @@ resource "aws_eks_node_group" "main" {
   instance_types  = [var.node_instance_type]
   capacity_type   = "ON_DEMAND"
 
+  # how many worker machines to run
   scaling_config {
     min_size     = 1
     desired_size = var.node_desired_size
     max_size     = 2
   }
 
+  # during an update only one machine may be down at a time
   update_config {
     max_unavailable = 1
   }

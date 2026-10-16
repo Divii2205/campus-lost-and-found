@@ -1,5 +1,7 @@
-# Troubleshooting lab 1: the image tag does not exist -> ErrImagePull / ImagePullBackOff
-# Investigate: kubectl get pods -n lostfound ; kubectl describe pod <name> -n lostfound
+# troubleshooting lab one
+# the image tag does not exist so the pod shows errimagepull and then imagepullbackoff
+# to look into it run kubectl get pods and then kubectl describe pod with the pod name
+# both in the lostfound namespace
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,4 +17,5 @@ spec:
     spec:
       containers:
         - name: web
+          # this tag was never built so the pull fails on purpose
           image: ghcr.io/divii2205/lostfound-frontend:does-not-exist

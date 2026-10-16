@@ -3,17 +3,21 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from app import models  # noqa: F401  (registers the Item table on Base.metadata)
+# import the models so the item table is known to alembic
+from app import models  # noqa: F401
 from app.config import settings
 from app.db import Base
 
+# use the same database address as the app
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)
 if config.config_file_name:
+    # set up logging from the alembic ini file
     fileConfig(config.config_file_name)
 target_metadata = Base.metadata
 
 
+# offline mode only writes the sql without a live database
 def run_migrations_offline():
     context.configure(url=settings.database_url, target_metadata=target_metadata, literal_binds=True,
                       dialect_opts={"paramstyle": "named"})
@@ -21,6 +25,7 @@ def run_migrations_offline():
         context.run_migrations()
 
 
+# online mode connects to the database and runs the changes
 def run_migrations_online():
     connectable = engine_from_config(config.get_section(config.config_ini_section), prefix="sqlalchemy.",
                                      poolclass=pool.NullPool)
@@ -30,6 +35,7 @@ def run_migrations_online():
             context.run_migrations()
 
 
+# pick the mode alembic was started in
 if context.is_offline_mode():
     run_migrations_offline()
 else:

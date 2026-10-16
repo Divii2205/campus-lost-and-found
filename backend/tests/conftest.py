@@ -1,7 +1,7 @@
-"""Test setup: every test gets a fresh, throwaway SQLite database.
+"""test setup where every test gets a fresh sqlite database that is thrown away after
 
-The production PostgreSQL database is never touched: get_db is overridden
-so the app talks to a temporary SQLite file instead.
+the real postgresql database is never touched because get_db is swapped
+so the app talks to a temporary sqlite file instead
 """
 import pytest
 from fastapi.testclient import TestClient
@@ -12,10 +12,12 @@ from app.db import Base, get_db
 from app.main import app
 
 
+# a test client that uses its own empty sqlite database
 @pytest.fixture()
 def client(tmp_path):
     engine = create_engine(f"sqlite:///{tmp_path / 'test.db'}", connect_args={"check_same_thread": False})
     TestingSession = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+    # make the tables in the new test database
     Base.metadata.create_all(bind=engine)
 
     def override_get_db():
@@ -25,13 +27,16 @@ def client(tmp_path):
         finally:
             db.close()
 
+    # tell the app to use the test database instead of the real one
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as test_client:
         yield test_client
+    # clean up after the test
     app.dependency_overrides.clear()
     engine.dispose()
 
 
+# a sample item that tests can send to the api
 @pytest.fixture()
 def sample_item():
     return {

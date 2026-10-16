@@ -1,4 +1,6 @@
-# Local kind cluster: ingress on lostfound.local, images loaded with `kind load`
+# extra settings for the local kind cluster
+# the site is on lostfound local and the images are loaded with kind load
+# never download images because they are already loaded into kind
 imagePullPolicy: Never
 config:
   environment: kind-dev

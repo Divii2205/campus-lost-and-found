@@ -1,3 +1,4 @@
+# ask the cluster for a disk to keep the database files
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -9,6 +10,7 @@ spec:
     requests:
       storage: {{ .Values.postgres.storage }}
 ---
+# one postgres database pod
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -18,7 +20,8 @@ metadata:
     {{- include "lostfound.labels" . | nindent 4 }}
 spec:
   replicas: 1
-  strategy: { type: Recreate }   # only one Pod may use the volume at a time
+  # stop the old pod before starting a new one because only one pod may use the disk at a time
+  strategy: { type: Recreate }
   selector:
     matchLabels: { app: {{ .Release.Name }}-postgres }
   template:
@@ -32,7 +35,9 @@ spec:
           envFrom:
             - secretRef: { name: {{ .Release.Name }}-db }
           env:
+            # keep the data in a folder inside the disk
             - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
+          # check that the database is ready for connections
           readinessProbe:
             exec: { command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""] }
             initialDelaySeconds: 5
@@ -46,6 +51,7 @@ spec:
         - name: data
           persistentVolumeClaim: { claimName: {{ .Release.Name }}-postgres-data }
 ---
+# a stable address for the database inside the cluster
 apiVersion: v1
 kind: Service
 metadata:

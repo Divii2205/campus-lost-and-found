@@ -1,24 +1,29 @@
-# Campus Lost & Found CI/CD
-# test -> build images -> Trivy security gate -> push to GHCR (tag = commit SHA) -> Helm deploy
+# campus lost and found ci cd pipeline
+# first run the tests then build the images then scan them with trivy
+# then push them to ghcr with the commit sha as the tag and then deploy with helm
 name: CI/CD
 
+# run on every push and pull request to the main branch
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
 
+# values shared by all jobs
 env:
   REGISTRY: ghcr.io
   TRIVY_IMAGE: aquasec/trivy:0.65.0
 
 jobs:
-  # 1. Quality gate: tests must pass before any image is built
+  # job one is the quality gate
+  # the tests must pass before any image is built
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      # set up python and reuse downloaded packages to save time
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -31,6 +36,7 @@ jobs:
         working-directory: backend
         run: pytest -v
 
+      # set up node and check that the frontend builds
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -42,16 +48,18 @@ jobs:
           npm ci
           npm run build
 
-  # 2. Build both images, scan them with Trivy, push to GHCR
+  # job two builds both images and scans them with trivy and pushes them to ghcr
   build-scan-push:
     needs: test
     runs-on: ubuntu-latest
+    # allow this job to read the code and write packages to ghcr
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v4
 
+      # ghcr needs the owner name in lowercase
       - name: Set image names (GHCR needs a lowercase owner)
         run: |
           OWNER="${GITHUB_REPOSITORY_OWNER,,}"
@@ -63,6 +71,7 @@ jobs:
       - name: Build frontend image
         run: docker build -t "$FRONTEND_IMAGE" frontend
 
+      # the scan fails the pipeline if it finds a high or critical problem that has a fix
       - name: Trivy scan backend image (fails on HIGH or CRITICAL)
         run: >
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE"
@@ -72,6 +81,7 @@ jobs:
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE"
           image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$FRONTEND_IMAGE"
 
+      # log in and push only on a real push and not on a pull request
       - name: Log in to GHCR
         if: github.event_name == 'push'
         uses: docker/login-action@v3
@@ -85,7 +95,8 @@ jobs:
           docker push "$BACKEND_IMAGE"
           docker push "$FRONTEND_IMAGE"
 
-  # 3. Deploy with Helm. Runs only when a KUBE_CONFIG secret (e.g. for EKS) is set in the repo.
+  # job three deploys with helm
+  # it only runs when a kube config secret for a cluster like eks is set in the repo
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build-scan-push
@@ -94,11 +105,13 @@ jobs:
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
     steps:
       - uses: actions/checkout@v4
+      # if there is no cluster secret just print a message and skip the deploy steps
       - name: Skip when no cluster is configured
         if: env.KUBE_CONFIG == ''
         run: echo "No KUBE_CONFIG secret set - skipping deploy. Images are in GHCR."
       - uses: azure/setup-helm@v4
         if: env.KUBE_CONFIG != ''
+      # install or upgrade the app on the cluster with the new image tags
       - name: helm upgrade --install
         if: env.KUBE_CONFIG != ''
         run: |

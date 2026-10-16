@@ -1,5 +1,5 @@
 {{- if .Values.ingress.enabled }}
-# "/api" goes to the FastAPI backend, everything else ("/") to the React frontend
+# api paths go to the fastapi backend and everything else goes to the react frontend
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

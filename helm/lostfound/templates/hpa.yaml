@@ -1,5 +1,6 @@
 {{- if .Values.hpa.enabled }}
-# Scales the backend between minReplicas and maxReplicas on CPU (needs metrics-server)
+# adds or removes backend pods between the min and max numbers based on cpu use
+# it needs metrics server in the cluster
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

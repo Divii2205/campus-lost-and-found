@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from './api.js';
 
+// the item types and the names people see for them
 const CATEGORIES = {
   ELECTRONICS: 'Electronics',
   BOOKS: 'Books & notes',
@@ -11,6 +12,7 @@ const CATEGORIES = {
   OTHER: 'Other',
 };
 
+// the filter buttons above the board
 const FILTERS = [
   { value: '', label: 'Everything' },
   { value: 'LOST', label: 'Lost' },
@@ -18,12 +20,15 @@ const FILTERS = [
   { value: 'CLAIMED', label: 'Back with owner' },
 ];
 
+// the word printed on the stamp of each tag
 const STAMP = { LOST: 'Lost', FOUND: 'Found', CLAIMED: 'Claimed' };
 
+// a blank form for a new report
 const EMPTY_FORM = {
   title: '', description: '', category: 'OTHER', status: 'LOST', location: '', reporter_name: '', contact: '',
 };
 
+// turn a date into short text like 5 min ago
 function timeAgo(iso) {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (minutes < 1) return 'just now';
@@ -33,13 +38,16 @@ function timeAgo(iso) {
   return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 }
 
+// the pop up form used to add a new report or edit one
 function ItemForm({ initial, onCancel, onSave }) {
   const [form, setForm] = useState(initial);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const editing = Boolean(initial.id);
+  // update one field of the form when the user types
   const set = (key) => (event) => setForm({ ...form, [key]: event.target.value });
 
+  // send the form and show an error if saving fails
   async function submit(event) {
     event.preventDefault();
     setSaving(true);
@@ -57,6 +65,7 @@ function ItemForm({ initial, onCancel, onSave }) {
       <form className="sheet" onSubmit={submit} aria-labelledby="sheet-title">
         <h2 id="sheet-title">{editing ? 'Edit this report' : form.status === 'FOUND' ? 'Report something you found' : 'Report something you lost'}</h2>
 
+        {/* the lost or found choice is only shown for a new report */}
         {!editing && (
           <div className="choice" role="radiogroup" aria-label="What happened">
             {['LOST', 'FOUND'].map((value) => (
@@ -109,6 +118,7 @@ function ItemForm({ initial, onCancel, onSave }) {
   );
 }
 
+// one item on the board drawn as a paper tag
 function Tag({ item, onEdit, onClaim, onDelete }) {
   const [claiming, setClaiming] = useState(false);
   const [name, setName] = useState('');
@@ -127,6 +137,7 @@ function Tag({ item, onEdit, onClaim, onDelete }) {
         {item.claimed_by && <div><dt>Picked up by</dt><dd>{item.claimed_by}</dd></div>}
       </dl>
 
+      {/* show the small claim form or the normal buttons */}
       {claiming ? (
         <form className="claim" onSubmit={(e) => { e.preventDefault(); onClaim(item, name); }}>
           <input autoFocus required minLength={2} value={name} onChange={(e) => setName(e.target.value)} placeholder="Name of the owner" aria-label="Name of the owner" />
@@ -144,6 +155,7 @@ function Tag({ item, onEdit, onClaim, onDelete }) {
   );
 }
 
+// the main page
 export default function App() {
   const [items, setItems] = useState([]);
   const [stats, setStats] = useState(null);
@@ -154,6 +166,7 @@ export default function App() {
   const [editing, setEditing] = useState(null);
   const [notice, setNotice] = useState('');
 
+  // get the items and the counts from the api
   const load = useCallback(async () => {
     try {
       const params = {};
@@ -170,17 +183,20 @@ export default function App() {
     }
   }, [status, query]);
 
+  // wait a little after typing before loading so we do not call the api on every key
   useEffect(() => {
     const timer = setTimeout(load, 200);
     return () => clearTimeout(timer);
   }, [load]);
 
+  // hide the notice message after a few seconds
   useEffect(() => {
     if (!notice) return undefined;
     const timer = setTimeout(() => setNotice(''), 3500);
     return () => clearTimeout(timer);
   }, [notice]);
 
+  // save a new report or the changes to an old one
   async function save(form) {
     if (form.id) {
       const { id, title, description, category, location, reporter_name, contact } = form;
@@ -194,6 +210,7 @@ export default function App() {
     load();
   }
 
+  // mark an item as given back to its owner
   async function claim(item, name) {
     try {
       await api.claim(item.id, name);
@@ -204,6 +221,7 @@ export default function App() {
     }
   }
 
+  // ask first and then remove an item from the board
   async function remove(item) {
     if (!window.confirm(`Remove "${item.title}" from the board?`)) return;
     try {
@@ -246,6 +264,7 @@ export default function App() {
           )}
         </div>
 
+        {/* loading and error and empty messages */}
         {loading && <p className="state">Loading the board…</p>}
         {!loading && error && (
           <div className="state error" role="alert">
@@ -260,6 +279,7 @@ export default function App() {
           </div>
         )}
 
+        {/* the board with one tag for each item */}
         <section className="board" aria-live="polite">
           {items.map((item) => (
             <Tag key={item.id} item={item} onEdit={setEditing} onClaim={claim} onDelete={remove} />

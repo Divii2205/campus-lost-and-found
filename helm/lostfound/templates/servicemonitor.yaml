@@ -1,5 +1,6 @@
 {{- if and .Values.monitoring.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
-# Tells the Prometheus Operator to scrape the backend /metrics endpoint every 15s
+# tells the prometheus operator to read the backend metrics page every 15 seconds
+# it is only made when monitoring is on and the cluster knows about service monitors
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

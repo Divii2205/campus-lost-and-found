@@ -1,13 +1,16 @@
-# Grafana settings inside kube-prometheus-stack
+# grafana settings inside the kube prometheus stack chart
 grafana:
   enabled: true
   adminUser: admin
-  # no adminPassword here: the chart generates one and stores it in the
-  # kube-prometheus-stack-grafana Secret (no passwords committed to Git)
+  # there is no admin password here
+  # the chart makes one and keeps it in the kube prometheus stack grafana secret
+  # so no passwords are saved in git
+  # a helper that finds dashboards in config maps and loads them
   sidecar:
     dashboards:
       enabled: true
-      label: grafana_dashboard    # loads monitoring/grafana-dashboard.yaml
+      # this label is how it finds our grafana dashboard file in the monitoring folder
+      label: grafana_dashboard
       searchNamespace: ALL
   service:
     type: ClusterIP

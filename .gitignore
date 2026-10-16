@@ -1,3 +1,5 @@
+# files git should never save
+
 # secrets
 .env
 *.pem
@@ -22,7 +24,7 @@ dist/
 tfplan
 crash.log
 
-# editors / os
+# editors and operating system files
 .idea/
 .vscode/
 .DS_Store

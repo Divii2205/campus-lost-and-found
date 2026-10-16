@@ -1,3 +1,4 @@
+# the terraform and aws provider versions this project needs
 terraform {
   required_version = ">= 1.7.0"
 
@@ -9,10 +10,11 @@ terraform {
   }
 }
 
-# Credentials come from `aws configure` (~/.aws/credentials) - never from this repo.
+# the aws login comes from the aws configure command on your computer and never from this repo
 provider "aws" {
   region = var.aws_region
 
+  # these tags are added to every aws resource
   default_tags {
     tags = {
       Project     = "campus-lost-and-found"

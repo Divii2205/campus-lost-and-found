@@ -1,9 +1,10 @@
+/* colors and fonts used across the page */
 :root {
-  --board: #dce3e8;      /* noticeboard felt */
+  --board: #dce3e8;      /* noticeboard background color */
   --board-dark: #c8d2d9;
-  --ink: #1c2a39;        /* navy pen ink */
+  --ink: #1c2a39;        /* dark blue pen ink color */
   --ink-soft: #4a5a6b;
-  --manila: #ecd3a0;     /* lost-property tag */
+  --manila: #ecd3a0;     /* paper tag color */
   --manila-edge: #d8b877;
   --lost: #c2362b;
   --found: #2f7d4f;
@@ -25,6 +26,7 @@ body {
 button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 
+/* text only for screen readers and hidden on screen */
 .sr-only {
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip: rect(0 0 0 0); white-space: nowrap;
@@ -32,7 +34,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .page { max-width: 1180px; margin: 0 auto; padding: 0 24px 48px; }
 
-/* masthead: search is the main job, so it sits in the hero */
+/* top of the page with the search box because search is the main job */
 .masthead { padding: 48px 0 32px; max-width: 760px; }
 .brand { margin: 0 0 28px; font: 800 1rem/1 var(--display); letter-spacing: -0.01em; }
 .masthead h1 {
@@ -67,7 +69,7 @@ button:disabled { opacity: 0.6; cursor: progress; }
 .small { padding: 6px 12px; font-size: 0.9rem; }
 .link { padding: 0; border: 0; background: none; text-decoration: underline; font-weight: 700; }
 
-/* filters */
+/* filter buttons */
 .toolbar {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
   border-top: 2px solid var(--ink); padding-top: 20px; margin-bottom: 28px;
@@ -78,7 +80,7 @@ button:disabled { opacity: 0.6; cursor: progress; }
 .count { margin-left: 8px; font-weight: 400; opacity: 0.75; }
 .tally { margin: 0; color: var(--ink-soft); }
 
-/* the memorable thing: each report is a manila lost-property tag with an ink stamp */
+/* each report looks like a paper lost property tag with an ink stamp */
 .board {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
@@ -127,14 +129,14 @@ button:disabled { opacity: 0.6; cursor: progress; }
 .tag-actions, .claim { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .claim input { flex: 1 1 140px; padding: 6px 10px; border: 2px solid var(--ink); border-radius: 8px; background: var(--paper); }
 
-/* states */
+/* loading and error and empty messages */
 .state { padding: 28px; border: 2px dashed var(--ink-soft); border-radius: 14px; max-width: 620px; }
 .state p { margin: 0 0 6px; }
 .state.error { border-color: var(--lost); color: var(--lost); }
 
 footer { margin-top: 56px; color: var(--ink-soft); font-size: 0.95rem; max-width: 60ch; }
 
-/* report sheet */
+/* the pop up report form */
 .overlay {
   position: fixed; inset: 0; z-index: 10;
   display: grid; place-items: center; padding: 16px;

@@ -1,4 +1,5 @@
-# Grafana loads every ConfigMap with the label grafana_dashboard=1
+# grafana loads every config map that has the grafana dashboard label set to 1
+# the dashboard itself is the json below
 apiVersion: v1
 kind: ConfigMap
 metadata:

@@ -1,5 +1,5 @@
-# Copy to terraform.tfvars if you want to change the defaults.
-# Never put AWS access keys here - Terraform reads them from `aws configure`.
+# copy this file to terraform tfvars if you want to change the default values
+# never put aws access keys here because terraform reads them from aws configure
 aws_region          = "ap-south-1"
 environment         = "dev"
 cluster_name        = "lostfound-eks"
