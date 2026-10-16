@@ -130,12 +130,12 @@ function Tag({ item, onEdit, onClaim, onDelete }) {
       {claiming ? (
         <form className="claim" onSubmit={(e) => { e.preventDefault(); onClaim(item, name); }}>
           <input autoFocus required minLength={2} value={name} onChange={(e) => setName(e.target.value)} placeholder="Name of the owner" aria-label="Name of the owner" />
-          <button className="primary small" type="submit">Mark claimed</button>
+          <button className="primary small" type="submit">Mark returned</button>
           <button className="ghost small" type="button" onClick={() => setClaiming(false)}>Cancel</button>
         </form>
       ) : (
         <div className="tag-actions">
-          {item.status !== 'CLAIMED' && <button className="primary small" onClick={() => setClaiming(true)}>It's back with the owner</button>}
+          {item.status !== 'CLAIMED' && <button className="primary small" onClick={() => setClaiming(true)}>Mark returned</button>}
           <button className="ghost small" onClick={() => onEdit(item)}>Edit</button>
           <button className="ghost small danger" onClick={() => onDelete(item)}>Remove</button>
         </div>
@@ -197,10 +197,10 @@ export default function App() {
   async function claim(item, name) {
     try {
       await api.claim(item.id, name);
-      setNotice(`"${item.title}" marked claimed by ${name}.`);
+      setNotice(`"${item.title}" marked returned to ${name}.`);
       load();
     } catch (err) {
-      setNotice(`Could not mark claimed: ${err.message}`);
+      setNotice(`Could not mark returned: ${err.message}`);
     }
   }
 
@@ -242,7 +242,7 @@ export default function App() {
             ))}
           </div>
           {stats && stats.total > 0 && (
-            <p className="tally">{stats.claimed} of {stats.total} items have found their way home.</p>
+            <p className="tally">{stats.claimed} of {stats.total} items are back with their owners.</p>
           )}
         </div>
 
