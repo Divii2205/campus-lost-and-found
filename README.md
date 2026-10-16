@@ -295,11 +295,17 @@ The workflow passes `actionlint` (a checker for GitHub Actions files). These are
 
 ### Pipeline run on GitHub
 
-> **To be filled in after the first push.**
+The first push to `main` started the pipeline by itself, and every job passed.
 
-- Actions run (green): **`<add link after the first push>`**
-- GHCR packages with SHA tags: `screenshots/05-ghcr-packages.png` *(added after the first push)*
-- Actions run summary: `screenshots/05-github-actions-green.png` *(added after the first push)*
+**Actions run (green):** https://github.com/Divii2205/campus-lost-and-found/actions/runs/38920194477
+
+All 3 jobs passed: `test`, then `build-scan-push`, then `deploy` (deploy skipped the cluster step because no cluster secret is set):
+
+![GitHub Actions run, all green](screenshots/05-github-actions-green.png)
+
+The images are now in GHCR. The tag is the commit SHA `29b1201ad5f4f1ab1c03823bd2f5071f05adf74b`, not `latest`:
+
+![GHCR package with the commit SHA tag](screenshots/05-ghcr-packages.png)
 
 ## 10. Security scanning (M6)
 
@@ -324,6 +330,10 @@ trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 <image>
 > The new scan is clean: 0 HIGH/CRITICAL in both images, and the check passes.
 
 ![Trivy: both images clean after the fix](screenshots/06-trivy-images-clean.png)
+
+The same Trivy check inside the real GitHub Actions run. The backend image `29b1201…` has 0 HIGH or CRITICAL problems, so the step passed and the images were pushed:
+
+![Trivy scan inside the GitHub Actions pipeline](screenshots/05-trivy-in-pipeline.png)
 
 **No secrets in Git.** gitleaks checked the whole history, and no secret files are saved in Git. AWS keys live only in `~/.aws/credentials` (made by `aws configure`). The database password in Kubernetes is a Secret set by Helm.
 
@@ -533,8 +543,8 @@ This table links each rubric line in `GRADING.md` to the file or screenshot that
 | | frontend multi-stage (Node → nginx) | `frontend/Dockerfile` |
 | | Non-root images | uid 10001 / uid 101 in the [compose screenshot](screenshots/04-docker-compose-up.png) |
 | | `docker compose up --build` starts 3 services | [compose](screenshots/04-docker-compose-up.png) |
-| **M5** | Workflow file, push to `main`, pytest gate, frontend build, both images, GHCR push, SHA tags | `.github/workflows/ci-cd.yml`, [lint + key lines](screenshots/05-ci-workflow-lint.png), Actions run link in [section 9](#pipeline-run-on-github) |
-| **M6** | Trivy on both images in CI, fails on HIGH/CRITICAL, CVE explained | [section 10](#10-security-scanning-m6), [before](screenshots/06-trivy-backend-before-fix.png) / [after](screenshots/06-trivy-images-clean.png) |
+| **M5** | Workflow file, push to `main`, pytest gate, frontend build, both images, GHCR push, SHA tags | `.github/workflows/ci-cd.yml`, [lint + key lines](screenshots/05-ci-workflow-lint.png), [green run](https://github.com/Divii2205/campus-lost-and-found/actions/runs/38920194477), [run screenshot](screenshots/05-github-actions-green.png), [GHCR SHA tag](screenshots/05-ghcr-packages.png) |
+| **M6** | Trivy on both images in CI, fails on HIGH/CRITICAL, CVE explained | [section 10](#10-security-scanning-m6), [before](screenshots/06-trivy-backend-before-fix.png) / [after](screenshots/06-trivy-images-clean.png) / [in the pipeline](screenshots/05-trivy-in-pipeline.png) |
 | **M7** | Valid HCL, init, plan, VPC + 2 public subnets, EKS + node group, destroy, tfvars.example | `terraform/`, [init](screenshots/07-terraform-init-validate.png), [plan](screenshots/07-terraform-plan.png), [apply](screenshots/07-terraform-apply.png), [AWS Console VPC](screenshots/07-aws-console-vpc.png), [AWS Console EKS](screenshots/07-aws-console-eks.png), [destroy](screenshots/07-terraform-destroy.png) |
 | **M8** | namespace.yaml, Helm chart, helm install, 2 replicas, ClusterIP, Ingress `/` + `/api`, pods Running | `k8s/`, `helm/lostfound/`, [section 12](#12-kubernetes--helm-m8) |
 | **M9** | `/metrics`, Prometheus scraping (UP), Grafana, live panel | `monitoring/`, [section 13](#13-monitoring-m9) |
