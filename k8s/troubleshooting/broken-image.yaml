@@ -14,5 +14,5 @@ spec:
       labels: { app: broken-image }
     spec:
       containers:
-        - name: backend
-          image: ghcr.io/divii2205/lostfound-backend:does-not-exist
+        - name: web
+          image: ghcr.io/divii2205/lostfound-frontend:does-not-exist
