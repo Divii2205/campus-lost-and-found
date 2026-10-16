@@ -27,7 +27,7 @@ spec:
       initContainers:
         - name: wait-for-db
           image: {{ .Values.postgres.image }}
-          command: ["sh", "-c", "until pg_isready -h {{ .Release.Name }}-postgres -p 5432; do echo waiting for db; sleep 2; done"]
+          command: ["sh", "-c", "until pg_isready -h {{ .Release.Name }}-postgres -p 5432 -U {{ .Values.postgres.username }}; do echo waiting for db; sleep 2; done"]
           resources:
             requests: { cpu: 10m, memory: 16Mi }
             limits: { cpu: 100m, memory: 64Mi }
