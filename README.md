@@ -235,7 +235,7 @@ The tests run before any box is built. If a test fails, the pipeline stops, and 
 Git saves every version of the code. GitHub keeps a copy of it online.
 
 - Repository: **https://github.com/Divii2205/campus-lost-and-found** (public)
-- There are 23 commits. Every commit is by **Divii2205**, and each message says what changed. For example: "Add Alembic migration that creates the items table" and "Remove pip and setuptools from backend runtime image to fix HIGH CVEs found by Trivy".
+- There are more than 25 commits (see the screenshot below). Every commit is by **Divii2205**, and each message says what changed. For example: "Add Alembic migration that creates the items table" and "Remove pip and setuptools from backend runtime image to fix HIGH CVEs found by Trivy".
 - `.gitignore` tells Git to skip `.env`, `__pycache__/`, `node_modules/`, `.venv/`, `dist/`, Terraform state and `terraform.tfvars`.
 - `.gitattributes` keeps LF line endings, so shell scripts and YAML files work the same on Windows and Linux.
 
@@ -527,7 +527,7 @@ This table links each rubric line in `GRADING.md` to the file or screenshot that
 | | Test DB, not production | `backend/tests/conftest.py` (SQLite per test) |
 | | pytest.ini / conftest.py | both present |
 | **M3** | Public GitHub repo | https://github.com/Divii2205/campus-lost-and-found |
-| | Meaningful commits (≥ 10) | 23 commits, [git log](screenshots/03-git-log.png) |
+| | Meaningful commits (≥ 10) | 25+ commits, [git log](screenshots/03-git-log.png) |
 | | .gitignore: .env, \_\_pycache\_\_, node_modules, .venv | `.gitignore` |
 | **M4** | backend/Dockerfile builds | [compose](screenshots/04-docker-compose-up.png) |
 | | frontend multi-stage (Node → nginx) | `frontend/Dockerfile` |
