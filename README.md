@@ -386,7 +386,29 @@ terraform destroy
 
 ![terraform plan](screenshots/07-terraform-plan.png)
 
-> **To be added in the next step:** Apply, AWS Console and destroy screenshots are added in the next step (`07-terraform-apply.png`, `07-aws-console-vpc.png`, `07-aws-console-eks.png`, `07-terraform-destroy.png`).
+### It was really built on AWS
+
+`terraform apply` built all 15 things in about 12 minutes:
+
+![terraform apply](screenshots/07-terraform-apply.png)
+
+The AWS command line shows the VPC, the 2 public subnets (in 2 different zones, ap-south-1a and ap-south-1b), the EKS cluster (Active) and the 1 worker computer (Ready):
+
+![AWS CLI: VPC, subnets, EKS, node](screenshots/07-aws-cli-vpc-eks.png)
+
+The AWS Console (the AWS website) in the Mumbai region. The VPC map shows the network, the 2 public subnets, the route table and the internet gateway:
+
+![AWS Console: VPC resource map](screenshots/07-aws-console-vpc.png)
+
+The EKS cluster with its node group `lostfound-eks-nodes`, Active:
+
+![AWS Console: EKS node group](screenshots/07-aws-console-eks.png)
+
+### Then everything was deleted
+
+Right after the screenshots, `terraform destroy` deleted all 15 things. A check of AWS then found 0 clusters, 0 VPCs, 0 computers, 0 disks, 0 NAT gateways and 0 load balancers left. Nothing keeps costing money. The cluster was up for about 30 minutes.
+
+![terraform destroy and AWS check](screenshots/07-terraform-destroy.png)
 
 ## 12. Kubernetes + Helm (M8)
 
@@ -513,7 +535,7 @@ This table links each rubric line in `GRADING.md` to the file or screenshot that
 | | `docker compose up --build` starts 3 services | [compose](screenshots/04-docker-compose-up.png) |
 | **M5** | Workflow file, push to `main`, pytest gate, frontend build, both images, GHCR push, SHA tags | `.github/workflows/ci-cd.yml`, [lint + key lines](screenshots/05-ci-workflow-lint.png), Actions run link in [section 9](#pipeline-run-on-github) |
 | **M6** | Trivy on both images in CI, fails on HIGH/CRITICAL, CVE explained | [section 10](#10-security-scanning-m6), [before](screenshots/06-trivy-backend-before-fix.png) / [after](screenshots/06-trivy-images-clean.png) |
-| **M7** | Valid HCL, init, plan, VPC + 2 public subnets, EKS + node group, destroy, tfvars.example | `terraform/`, [section 11](#11-terraform-on-aws-m7) |
+| **M7** | Valid HCL, init, plan, VPC + 2 public subnets, EKS + node group, destroy, tfvars.example | `terraform/`, [init](screenshots/07-terraform-init-validate.png), [plan](screenshots/07-terraform-plan.png), [apply](screenshots/07-terraform-apply.png), [AWS Console VPC](screenshots/07-aws-console-vpc.png), [AWS Console EKS](screenshots/07-aws-console-eks.png), [destroy](screenshots/07-terraform-destroy.png) |
 | **M8** | namespace.yaml, Helm chart, helm install, 2 replicas, ClusterIP, Ingress `/` + `/api`, pods Running | `k8s/`, `helm/lostfound/`, [section 12](#12-kubernetes--helm-m8) |
 | **M9** | `/metrics`, Prometheus scraping (UP), Grafana, live panel | `monitoring/`, [section 13](#13-monitoring-m9) |
 | **M10** | README, live demo | this file, [demo script](#16-final-demo-script-m10) |
