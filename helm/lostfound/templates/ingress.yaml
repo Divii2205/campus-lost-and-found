@@ -1,0 +1,22 @@
+{{- if .Values.ingress.enabled }}
+# "/api" goes to the FastAPI backend, everything else ("/") to the React frontend
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}
+  labels: {{- include "lostfound.labels" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service: { name: backend, port: { number: 8000 } }
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: {{ .Release.Name }}-frontend, port: { number: 80 } }
+{{- end }}

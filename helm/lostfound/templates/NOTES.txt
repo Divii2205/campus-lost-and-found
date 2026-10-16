@@ -1,0 +1,11 @@
+Campus Lost & Found is deployed in namespace {{ .Release.Namespace }}.
+
+  backend image : {{ include "lostfound.backendImage" . }}
+  frontend image: {{ include "lostfound.frontendImage" . }}
+
+Check it:
+  kubectl get pods,svc,ingress,hpa -n {{ .Release.Namespace }}
+{{- if .Values.ingress.enabled }}
+
+Open: http://{{ .Values.ingress.host }}   (API: http://{{ .Values.ingress.host }}/api/items)
+{{- end }}

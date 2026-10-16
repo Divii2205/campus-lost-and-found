@@ -1,0 +1,46 @@
+# Image tags are always a Git commit SHA. CI passes them with --set backend.tag=<sha>.
+backend:
+  image: ghcr.io/divii2205/lostfound-backend
+  tag: ""            # required: set to the commit SHA
+  replicas: 2
+  resources:
+    requests: { cpu: 100m, memory: 192Mi }
+    limits: { cpu: 500m, memory: 384Mi }
+
+frontend:
+  image: ghcr.io/divii2205/lostfound-frontend
+  tag: ""            # required: set to the commit SHA
+  replicas: 2
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 200m, memory: 128Mi }
+
+imagePullPolicy: IfNotPresent
+imagePullSecrets: []
+
+config:
+  appName: "Campus Lost & Found API"
+  environment: kubernetes
+
+postgres:
+  image: postgres:16-alpine
+  database: lostfound
+  username: lostfound
+  password: change-me     # override with --set postgres.password=... ; stored in a Secret
+  storage: 1Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  host: lostfound.local
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 60
+
+monitoring:
+  serviceMonitor:
+    enabled: true
+    releaseLabel: kube-prometheus-stack   # must match the Prometheus Operator release

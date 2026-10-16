@@ -1,0 +1,17 @@
+{{- if and .Values.monitoring.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+# Tells the Prometheus Operator to scrape the backend /metrics endpoint every 15s
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}-backend
+  labels:
+    release: {{ .Values.monitoring.serviceMonitor.releaseLabel }}
+    {{- include "lostfound.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels: { app: {{ .Release.Name }}-backend }
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+{{- end }}

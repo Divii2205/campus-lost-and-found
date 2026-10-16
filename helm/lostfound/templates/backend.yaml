@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-backend
+  labels:
+    app: {{ .Release.Name }}-backend
+    {{- include "lostfound.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.hpa.enabled }}
+  replicas: {{ .Values.backend.replicas }}
+  {{- end }}
+  selector:
+    matchLabels: { app: {{ .Release.Name }}-backend }
+  template:
+    metadata:
+      labels: { app: {{ .Release.Name }}-backend }
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/config.yaml") . | sha256sum }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: backend
+          image: {{ include "lostfound.backendImage" . }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - { name: http, containerPort: 8000 }
+          envFrom:
+            - configMapRef: { name: {{ .Release.Name }}-config }
+          env:
+            - name: DATABASE_URL
+              valueFrom: { secretKeyRef: { name: {{ .Release.Name }}-db, key: DATABASE_URL } }
+          # startup: migrations + uvicorn get up to 150s before liveness starts
+          startupProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet: { path: /ready, port: http }
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 15
+            timeoutSeconds: 3
+          resources: {{- toYaml .Values.backend.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+---
+# Named "backend" because the frontend nginx proxies /api/ to http://backend:8000
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  labels:
+    app: {{ .Release.Name }}-backend
+    {{- include "lostfound.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector: { app: {{ .Release.Name }}-backend }
+  ports:
+    - { name: http, port: 8000, targetPort: http }

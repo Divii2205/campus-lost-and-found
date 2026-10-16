@@ -1,0 +1,7 @@
+# Local kind cluster: ingress on lostfound.local, images loaded with `kind load`
+imagePullPolicy: Never
+config:
+  environment: kind-dev
+ingress:
+  enabled: true
+  host: lostfound.local
