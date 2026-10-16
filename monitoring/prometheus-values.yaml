@@ -1,0 +1,23 @@
+# Helm values for kube-prometheus-stack (Prometheus Operator + Prometheus + Grafana)
+# helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+#   -n monitoring --create-namespace -f monitoring/prometheus-values.yaml -f monitoring/grafana-values.yaml
+prometheus:
+  prometheusSpec:
+    # pick up ServiceMonitors from every namespace (our app lives in "lostfound")
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorNamespaceSelector: {}
+    retention: 2d
+    resources:
+      requests: { cpu: 100m, memory: 400Mi }
+
+# small local cluster: skip pieces we do not use
+alertmanager:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
