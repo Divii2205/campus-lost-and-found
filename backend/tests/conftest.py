@@ -40,6 +40,6 @@ def sample_item():
         "category": "ELECTRONICS",
         "status": "FOUND",
         "location": "Central Library, 2nd floor",
-        "reporter_name": "Divija",
-        "contact": "divija@campus.edu",
+        "reporter_name": "Divijaa",
+        "contact": "divijaa@campus.edu",
     }
