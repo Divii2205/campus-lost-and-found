@@ -23,6 +23,16 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
+      # wait until PostgreSQL accepts connections, so migrations don't crash the container
+      initContainers:
+        - name: wait-for-db
+          image: {{ .Values.postgres.image }}
+          command: ["sh", "-c", "until pg_isready -h {{ .Release.Name }}-postgres -p 5432; do echo waiting for db; sleep 2; done"]
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { cpu: 100m, memory: 64Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
       containers:
         - name: backend
           image: {{ include "lostfound.backendImage" . }}
