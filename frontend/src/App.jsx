@@ -220,7 +220,7 @@ export default function App() {
       <header className="masthead">
         <p className="brand">Campus Lost &amp; Found</p>
         <h1>Lost something on campus?</h1>
-        <p className="lede">Search the board first. Somebody may have already handed it in.</p>
+        <p className="lede">Search the board before you report. Someone may have handed it in already.</p>
         <label className="search">
           <span className="sr-only">Search items</span>
           <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Try “calculator”, “library” or “keys”" />
