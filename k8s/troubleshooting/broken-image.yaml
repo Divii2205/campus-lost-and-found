@@ -1,0 +1,18 @@
+# Troubleshooting lab 1: the image tag does not exist -> ErrImagePull / ImagePullBackOff
+# Investigate: kubectl get pods -n lostfound ; kubectl describe pod <name> -n lostfound
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lostfound-broken-image
+  namespace: lostfound
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: broken-image }
+  template:
+    metadata:
+      labels: { app: broken-image }
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/divii2205/lostfound-backend:does-not-exist
