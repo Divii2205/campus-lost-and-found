@@ -179,6 +179,7 @@ campus-lost-and-found/
 ├── argocd/                   application.yaml (the Argo CD app)
 ├── monitoring/               prometheus-values.yaml, grafana-values.yaml, grafana-dashboard.yaml
 ├── scripts/                  deploy-local.sh, gitops-release.sh, load-test.sh
+├── demo/                     presentation.pptx, slides.pdf, demo-video.mp4
 └── screenshots/
 ```
 
@@ -193,6 +194,7 @@ campus-lost-and-found/
 | [`argocd/`](argocd) | The Argo CD app that deploys the Helm package from Git |
 | [`monitoring/`](monitoring) | Settings for Prometheus and Grafana |
 | [`scripts/`](scripts) | Small helper scripts |
+| [`demo/`](demo) | The slides and the demo video |
 | [`screenshots/`](screenshots) | The pictures used on this page |
 
 ### Version control
@@ -576,6 +578,14 @@ edit code -> git push -> GitHub Actions green (tests, Trivy, GHCR)
           -> Argo CD sees the new SHA -> Synced + Healthy -> new pods running
 ```
 
+Argo CD after a release: the app `lostfound` is Synced to the new commit and Healthy, with every resource in the tree:
+
+![Argo CD app synced and healthy](screenshots/12-argocd-synced.png)
+
+The history shows each deploy as a Git revision, started by the automated sync policy:
+
+![Argo CD sync history](screenshots/12-argocd-history.png)
+
 **Why the images are built on the laptop:** GitHub Actions builds images for amd64 computers. The laptop is an Apple Silicon Mac, so kind runs arm64 and cannot run those images. `gitops-release.sh` builds the same commit for arm64 and loads it into kind, the same way `deploy-local.sh` does. On EKS (amd64) Argo CD would pull the GHCR images directly.
 
 ## Monitoring
@@ -682,6 +692,12 @@ The Service looks for pods with `app=lostfound-api`, but the pods are labelled `
 
 ## Demo walkthrough
 
+| File | What it is |
+|---|---|
+| [`demo/demo-video.mp4`](demo/demo-video.mp4) | The demo video: the slides first, then a live walkthrough of CI/CD, the code, Terraform, Argo CD, Kubernetes, Prometheus and Grafana |
+| [`demo/presentation.pptx`](demo/presentation.pptx) | The slides (14 slides) |
+| [`demo/slides.pdf`](demo/slides.pdf) | The same slides as a PDF |
+
 A 10 minute tour, from code change to live update. Run it live, or record it.
 
 1. **App:** open http://lostfound.local, report a found item, search for it, then mark it returned.
@@ -733,7 +749,7 @@ This project was built as the final DevOps capstone. The table maps each course 
 | **M7** Terraform | Valid HCL, init, plan (15 resources), VPC + 2 public subnets, EKS + node group, destroy, tfvars.example | `terraform/` | [init](screenshots/07-terraform-init-validate.png), [plan](screenshots/07-terraform-plan.png), [apply](screenshots/07-terraform-apply.png), [CLI](screenshots/07-aws-cli-vpc-eks.png), [Console VPC](screenshots/07-aws-console-vpc.png), [Console EKS](screenshots/07-aws-console-eks.png), [destroy](screenshots/07-terraform-destroy.png) |
 | **M8** Kubernetes + Helm | namespace.yaml, Helm chart, `helm upgrade --install`, 2 replicas each, ClusterIP, Ingress `/` + `/api`, pods Running, HPA | `k8s/`, `helm/lostfound/` | [pods](screenshots/08-kubectl-get-pods.png), [svc](screenshots/08-kubectl-get-svc.png), [helm list](screenshots/08-helm-list.png), [Ingress](screenshots/08-ingress-routing.png), [app via Ingress](screenshots/08-app-via-ingress-lostfound-local.png), [config + probes](screenshots/08-configmap-secret-pvc-probes.png), [HPA](screenshots/08-hpa-scaling.png) |
 | **M9** Observability | `/metrics`, Prometheus scraping (UP), Grafana installed, live panel | `monitoring/` | [/metrics](screenshots/09-metrics-endpoint.png), [targets UP](screenshots/09-prometheus-targets-up.png), [Grafana](screenshots/09-grafana-dashboard.png) |
-| **M10** Presentation | README explains the app, live demo: commit, pipeline, deploy update | `README.md`, [Demo walkthrough](#demo-walkthrough) | [commit to deploy](screenshots/10-demo-commit-to-deploy.png), [updated page](screenshots/10-demo-updated-page.png) |
+| **M10** Presentation | README explains the app, slides and demo video: commit, pipeline, deploy update | `README.md`, `demo/`, [Demo walkthrough](#demo-walkthrough) | [commit to deploy](screenshots/10-demo-commit-to-deploy.png), [updated page](screenshots/10-demo-updated-page.png) |
 
 ## Author
 
