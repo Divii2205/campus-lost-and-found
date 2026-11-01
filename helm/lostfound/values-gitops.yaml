@@ -3,6 +3,6 @@
 # scripts/gitops-release.sh writes the new commit sha here
 # then you commit and push it and argocd rolls it out
 backend:
-  tag: "29b1201ad5f4f1ab1c03823bd2f5071f05adf74b"
+  tag: "4faf2f4154ef4bc3bbafe786cf816396414057b5"
 frontend:
-  tag: "29b1201ad5f4f1ab1c03823bd2f5071f05adf74b"
+  tag: "4faf2f4154ef4bc3bbafe786cf816396414057b5"
