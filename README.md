@@ -12,7 +12,7 @@
 ![Kubernetes](https://img.shields.io/badge/deploy-Kubernetes%20%2B%20Helm-326ce5)
 ![Terraform](https://img.shields.io/badge/infra-Terraform%20on%20AWS-7b42bc)
 
-[Quick start](#quick-start) · [How it works](#how-it-works) · [API](#api-reference) · [CI/CD](#cicd-pipeline) · [Kubernetes](#deploying-to-kubernetes-with-helm) · [Monitoring](#monitoring) · [Runbook](#troubleshooting-runbook)
+[Quick start](#quick-start) · [How it works](#how-it-works) · [API](#api-reference) · [CI/CD](#cicd-pipeline) · [Kubernetes](#deploying-to-kubernetes-with-helm) · [ArgoCD](#gitops-with-argocd) · [Monitoring](#monitoring) · [Runbook](#troubleshooting-runbook)
 
 </div>
 
@@ -33,7 +33,7 @@ The project also shows the full path that takes code from a laptop to a real, wa
 
 ```text
 Code -> Git -> GitHub Actions (pytest -> build -> Trivy -> GHCR) -> Terraform (AWS VPC + EKS)
-     -> Kubernetes + Helm (Ingress, HPA, probes) -> Prometheus + Grafana -> Troubleshooting
+     -> Kubernetes + Helm (Ingress, HPA, probes) -> ArgoCD (GitOps) -> Prometheus + Grafana -> Troubleshooting
 ```
 
 Every screenshot on this page is real output from this project.
@@ -111,6 +111,7 @@ Every tool, with one plain line about what it does.
 | Security | Trivy (image scan gate), gitleaks (secret scan) | Trivy looks inside each box for known security holes. gitleaks looks for passwords or keys saved by mistake. |
 | Infrastructure | Terraform + AWS (VPC, subnets, IGW, EKS, node group, IAM) | AWS is Amazon's cloud where you rent computers. Terraform writes down the servers you want in a file and then builds them for you. |
 | Kubernetes | kind (local), Helm 3 chart, ingress-nginx, metrics-server, HPA | Kubernetes runs many boxes and restarts them if they break. kind is a small Kubernetes on your own laptop. Helm is like an installer for apps on Kubernetes. ingress-nginx is the front door that sends visitors to the right part. metrics-server measures CPU use. The HPA adds more copies of the app when it gets busy. |
+| GitOps | Argo CD | Argo CD watches this Git repo and makes the cluster match it. A new release is just a change to a file in Git. |
 | Monitoring | kube-prometheus-stack (Prometheus Operator, Prometheus, Grafana) | Prometheus collects numbers about the app every few seconds. Grafana turns those numbers into live charts. |
 
 ## Quick start
@@ -174,9 +175,10 @@ campus-lost-and-found/
 ├── .github/workflows/ci-cd.yml
 ├── terraform/                versions.tf, variables.tf, main.tf (VPC), eks.tf, outputs.tf, terraform.tfvars.example
 ├── k8s/                      namespace.yaml, kind-config.yaml, troubleshooting/
-├── helm/lostfound/           Chart.yaml, values.yaml, values-dev.yaml, templates/
+├── helm/lostfound/           Chart.yaml, values.yaml, values-dev.yaml, values-gitops.yaml, templates/
+├── argocd/                   application.yaml (the Argo CD app)
 ├── monitoring/               prometheus-values.yaml, grafana-values.yaml, grafana-dashboard.yaml
-├── scripts/                  deploy-local.sh, load-test.sh
+├── scripts/                  deploy-local.sh, gitops-release.sh, load-test.sh
 └── screenshots/
 ```
 
@@ -188,6 +190,7 @@ campus-lost-and-found/
 | [`terraform/`](terraform) | The files that build the AWS servers |
 | [`k8s/`](k8s) | Basic Kubernetes files and the broken files used for practice |
 | [`helm/lostfound/`](helm/lostfound) | The Helm package that installs the whole app on Kubernetes |
+| [`argocd/`](argocd) | The Argo CD app that deploys the Helm package from Git |
 | [`monitoring/`](monitoring) | Settings for Prometheus and Grafana |
 | [`scripts/`](scripts) | Small helper scripts |
 | [`screenshots/`](screenshots) | The pictures used on this page |
@@ -540,6 +543,40 @@ kubectl get hpa -n lostfound -w
 ```
 
 ![HPA scaling](screenshots/08-hpa-scaling.png)
+
+## GitOps with ArgoCD
+
+GitOps means Git holds the wanted state of the cluster. Argo CD is a tool inside the cluster that reads Git and makes the cluster match it. Nobody runs `helm upgrade` by hand. A release is just a commit.
+
+| File | What it does |
+|---|---|
+| [`argocd/application.yaml`](argocd/application.yaml) | The Argo CD app `lostfound`. It reads `helm/lostfound` from the `main` branch of this repo and installs it in the `lostfound` namespace. Auto sync, prune and self heal are on. |
+| [`helm/lostfound/values-gitops.yaml`](helm/lostfound/values-gitops.yaml) | Only the two image tags. Changing them in Git is how a new version goes out. |
+| [`scripts/gitops-release.sh`](scripts/gitops-release.sh) | Builds both images with the current commit SHA, loads them into kind and writes the SHA into `values-gitops.yaml`. |
+
+Install Argo CD and add the app (once):
+
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl wait -n argocd --for=condition=Available deployment --all --timeout=300s
+kubectl apply -f argocd/application.yaml
+# the Argo CD page at https://localhost:8080, user admin, password from
+kubectl port-forward -n argocd svc/argocd-server 8080:443
+kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
+```
+
+Install the monitoring stack first. The chart has a ServiceMonitor, and Argo CD can only create it after Prometheus Operator is installed.
+
+The release flow:
+
+```text
+edit code -> git push -> GitHub Actions green (tests, Trivy, GHCR)
+          -> ./scripts/gitops-release.sh -> git commit + push values-gitops.yaml
+          -> Argo CD sees the new SHA -> Synced + Healthy -> new pods running
+```
+
+**Why the images are built on the laptop:** GitHub Actions builds images for amd64 computers. The laptop is an Apple Silicon Mac, so kind runs arm64 and cannot run those images. `gitops-release.sh` builds the same commit for arm64 and loads it into kind, the same way `deploy-local.sh` does. On EKS (amd64) Argo CD would pull the GHCR images directly.
 
 ## Monitoring
 

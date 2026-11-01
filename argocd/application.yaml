@@ -1,0 +1,35 @@
+# the argocd application for campus lost and found
+# argocd reads the helm chart from this github repo and keeps the cluster the same as git
+# a release happens when the image tags in values-gitops.yaml change in git
+# apply it once with kubectl apply -f argocd/application.yaml after argocd is installed
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: lostfound
+  namespace: argocd
+spec:
+  project: default
+  # where the wanted state lives
+  source:
+    repoURL: https://github.com/Divii2205/campus-lost-and-found
+    targetRevision: main
+    path: helm/lostfound
+    helm:
+      releaseName: lostfound
+      # the last file wins so the tags in values-gitops.yaml are the ones used
+      valueFiles:
+        - values.yaml
+        - values-dev.yaml
+        - values-gitops.yaml
+  # where the app runs
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: lostfound
+  syncPolicy:
+    # sync by itself when git changes, delete things removed from git
+    # and undo any change made by hand in the cluster
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
